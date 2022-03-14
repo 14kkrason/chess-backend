@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Chat Socket.IO</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font: 13px Helvetica, Arial; }
+            form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+            form input { border: 0; padding: 10px; width: 90%; margin-right: 0.5%; }
+            form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+            #messages { list-style-type: none; margin: 0; padding: 0; }
+            #messages li { padding: 5px 10px; }
+            #messages li:nth-child(odd) { background: #eee; }
+        </style>
+    </head>
+    <body>
+        <ul id="messages"></ul>
+        <form action="">
+            <input id="m" autocomplete="off"/><button>Send</button>
+        </form>
+        <button id="btn">Login</button>
+        <button id="btn-refresh">Refresh</button>
+        <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+        <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+        <script>
+          $(function () {
+            var getCache = true
+            // this little manouver makes the client use the port of application, 
+            // solving all problems we have encountered thus far
+            var socket = io(`http://localhost:${3000}`);
+            $('form').submit(function(e) {
+              e.preventDefault(); // prevents page reloading
+              socket.emit('message', $('#m').val());
+              $('#m').val('');
+              return false;
+            });
+
+            $('#btn').click(function() {
+              
+
+              const myHeaders = new Headers();
+              myHeaders.append('Content-Type', 'application/json');
+              
+
+              const data = {
+                body: JSON.stringify({ username: 'KrzysztofKrason', password: 'admin'}),
+                headers: {"Content-type": "application/json; charset=UTF-8"},
+                method: 'POST',
+                credentials: 'include'
+              }
+
+              fetch(`http://localhost:${3000}/api/auth/login`, data)
+                .then(res => console.log(res))
+                .catch(err => console.log(err));
+            });
+
+            $('#btn-refresh').click(function() {
+              
+
+              const myHeaders = new Headers();
+              myHeaders.append('Content-Type', 'application/json');
+              
+
+              const data = {
+                headers: {"Content-type": "application/json; charset=UTF-8"},
+                body: JSON.stringify({ message: "User logged in." }),
+                method: 'POST',
+                credentials: 'include'
+              }
+
+              fetch(`http://localhost:${3000}/api/auth/refresh-token`, data)
+                .then(res => {
+                  console.log(res);
+                  socket.disconnect().connect()
+                })
+                .catch(err => console.log(err));
+            });
+
+            socket.on('connection', ()=> {
+              console.log('connected')
+            });
+            socket.on('message', function(msg){
+              $('#messages').append($('<li>').text(msg));
+            })
+            socket.on('rebuild cached messages', (messages) => {
+              if (messages && getCache) {
+                for(message of messages) {
+                  $('#messages').append($('<li>').text(message))
+                }
+              }
+              getCache = false
+            })
+          });
+        </script>
+    </body>
+</html>
