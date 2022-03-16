@@ -1,5 +1,16 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Date, Document } from 'mongoose';
+import { Document } from 'mongoose';
+
+
+interface progression {
+  elo: number,
+  date: number
+}
+
+interface game {
+  id: string,
+  color: string
+}
 
 @Schema()
 export class User {
@@ -22,13 +33,28 @@ export class User {
   registrationDate: number;
 
   @Prop({ required: true, default: 800 })
-  elo: number;
+  eloSpeed: number;
+
+  @Prop({ required: true, default: 800 })
+  eloBlitz: number;
+
+  @Prop({ required: true, default: 800 })
+  eloBullet: number;
+
+  @Prop({ required: true, default: [{ elo: 800, date: Date.now() }] })
+  eloProgressionSpeed: progression[]
+
+  @Prop({ required: true, default: [{ elo: 800, date: Date.now() }] })
+  eloProgressionBlitz: progression[]
+
+  @Prop({ required: true, default: [{ elo: 800, date: Date.now() }] })
+  eloProgressionBullet: progression[]
 
   @Prop({required: true, default: 'user'})
   role: string;
 
   @Prop({ default: [] })
-  games: string[];
+  games: game[];
 
   @Prop()
   description: string;
