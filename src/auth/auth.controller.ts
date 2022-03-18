@@ -42,7 +42,20 @@ export class AuthController {
     });
     res.status(HttpStatus.OK);
     this.logger.log(`Successful login for user: ${req.user.username}`)
-    return { message: 'User logged in successfuly.' };
+    return { username: req.user.username, role: req.user.role };
+  }
+
+  @Post('register')
+  async handleUserRegistration(
+    @Body() createUserDto: CreateUserDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const user = await this.usersManagmentService.create(createUserDto);
+    if (user) {
+      return user.username;
+    }
+    res.status(HttpStatus.BAD_REQUEST);
+    return "Can't add user, login is already taken.";
   }
 
   @Post('refresh-token')
@@ -100,6 +113,8 @@ export class AuthController {
             `Routine refresh token check performed successfuly for ${parsedRefreshToken.username}`,
           );
         }
+
+        return { username: parsedRefreshToken.username, role: parsedRefreshToken.role };
       }
     } catch (e) {
       res.status(HttpStatus.UNAUTHORIZED);
@@ -112,16 +127,5 @@ export class AuthController {
     }
   }
 
-  @Post('register')
-  async handleUserRegistration(
-    @Body() createUserDto: CreateUserDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    const user = await this.usersManagmentService.create(createUserDto);
-    if (user) {
-      return user.username;
-    }
-    res.status(HttpStatus.BAD_REQUEST);
-    return "Can't add user, login is already taken.";
-  }
+  
 }
