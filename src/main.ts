@@ -9,7 +9,7 @@ async function bootstrap() {
   });
   app.use(cookieParser());
   app.setGlobalPrefix('api');
-  app.enableCors({ origin: 'null', credentials: true})
+  app.enableCors({ origin: 'http://localhost:4200', credentials: true})
   app.useGlobalPipes(new ValidationPipe());
   await app.listen(3000);
 }

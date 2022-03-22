@@ -61,10 +61,14 @@ export class GameGateway
   async handleConnection(client: Socket) {
     if (client.request.headers.cookie) {
       try {
-        const bearerToken = await this.authService.returnAccessTokenFromCookie(
+        const bearerToken = await this.authService.returnTokenFromCookie(
           client.request.headers.cookie!,
+          'access_token',
         );
-        const decodedToken = await this.authService.verifyAccessToken(bearerToken);
+        const decodedToken = await this.authService.verifyToken(
+          bearerToken,
+          'access_token',
+        );
         await this.redisService.client
           .hSet(`chess:socketUser:${decodedToken.username}`, {
             login: decodedToken.username,
@@ -74,44 +78,41 @@ export class GameGateway
             this.logger.debug(`User connected: ${decodedToken.username}`);
           });
       } catch (e) {
-        if(e.message === "jwt must be provided") {
-          this.logger.warn('No access token located while connecting.')
-        }
-        else {
+        if (e.message === 'jwt must be provided') {
+          this.logger.warn('No access token located while connecting.');
+        } else {
           this.logger.error(`Error while connecting user: ${e.message}`);
         }
         client.disconnect();
       }
     } else {
       client.disconnect();
-      this.logger.warn('No cookie provided.')
+      this.logger.warn('No cookie provided.');
     }
   }
 
   async handleDisconnect(client: any) {
     try {
-      const token = await this.authService.returnAccessTokenFromCookie(
+      const token = await this.authService.returnTokenFromCookie(
         client.request.headers.cookie!,
+        'access_token'
       );
       // we don't verify the token because we don't care if it is valid
       // (e.g not expired)
-      const user: any = await this.authService.decode(token); 
+      const user: any = await this.authService.decode(token);
       if (user) {
         await this.redisService.client
-        .del(`chess:socketUser:${user.username}`)
-        .then(() => {
-          this.logger.debug(`User disconnected: ${user.username}`);
-        });
+          .del(`chess:socketUser:${user.username}`)
+          .then(() => {
+            this.logger.debug(`User disconnected: ${user.username}`);
+          });
+      } else {
+        this.logger.warn('No access token located while disconnecting.');
       }
-      else {
-        this.logger.warn('No access token located while disconnecting.')
-      }
-      
     } catch (e) {
-      if (e.message === "jwt must be provided" ) {
+      if (e.message === 'jwt must be provided') {
         // pass
-      }
-      else {
+      } else {
         this.logger.error(`Error while disconnecting user: ${e.message}`);
       }
     }

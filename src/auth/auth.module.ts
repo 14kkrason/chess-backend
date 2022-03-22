@@ -12,6 +12,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtAuthGuard } from './guards/jwt.guard';
 import { WsGuard } from './guards/ws.guard';
+import { JwtInterceptor } from './jwt.interceptor';
 
 @Module({
   imports: [
@@ -22,7 +23,7 @@ import { WsGuard } from './guards/ws.guard';
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '60s' },
+        signOptions: { expiresIn: '15m' },
       }),
     }),
   ],
@@ -32,7 +33,8 @@ import { WsGuard } from './guards/ws.guard';
     LocalAuthGuard,
     JwtStrategy,
     JwtAuthGuard,
-    WsGuard
+    WsGuard,
+    JwtInterceptor
   ],
   controllers: [AuthController],
   exports: [
@@ -41,7 +43,8 @@ import { WsGuard } from './guards/ws.guard';
     JwtStrategy,
     LocalAuthGuard,
     JwtAuthGuard,
-    WsGuard
+    WsGuard,
+    JwtInterceptor
   ],
 })
 export class AuthModule {}

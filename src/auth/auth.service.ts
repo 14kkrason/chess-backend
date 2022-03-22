@@ -28,7 +28,7 @@ export class AuthService {
         username: user.username,
         role: user.role,
       };
-      this.logger.debug(`User ${username} vaildated succesfuly.`);
+      this.logger.verbose(`User ${username} vaildated succesfuly.`);
       return result;
     }
     this.logger.log(
@@ -49,36 +49,53 @@ export class AuthService {
     return this.jwtService.decode(token);
   }
 
+  async revokeRefreshToken(username: string) {
+    await this.usersManagmentService.updateRefreshToken(username, '');
+  }
+
   async issueRefreshToken(user: ValidatedUser) {
-    const payload = { username: user.username, role: user.role, id: uuid()};
+    const payload = { username: user.username, role: user.role, id: uuid() };
     await this.usersManagmentService.updateRefreshToken(
       user.username,
       payload.id,
     );
     const signedPayload = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('REFRESH_SECRET'),
-      expiresIn: '7d',
+      expiresIn: '1d',
     });
     return {
       refresh_token: signedPayload,
     };
   }
 
-  async verifyAccessToken(token: string) {
-    return this.jwtService.verify(token);
+  async verifyToken(token: string, type: string) {
+    let return_token;
+    switch (type) {
+      case 'access_token':
+        return_token = this.jwtService.verify(token);
+        break;
+      case 'refresh_token':
+        return_token = this.jwtService.verify(token, {
+          secret: this.configService.get<string>('REFRESH_SECRET'),
+        });
+        break;
+      default:
+        break;
+    }
+    return return_token;
   }
 
-  async verifyRefreshToken(token: string) {
-    return this.jwtService.verify(token, {
-      secret: this.configService.get<string>('REFRESH_SECRET'),
-    });
-  }
-
-  async returnAccessTokenFromCookie(token: string) {
-    return cookie.parse(token).access_token;
-  }
-
-  async returnRefreshTokenFromCookie(token: string) {
-    return cookie.parse(token).refresh_token;
+  async returnTokenFromCookie(token: string, type: string): Promise<string>{
+    let return_token = '';
+    switch (type) {
+      case 'access_token':
+        return_token = cookie.parse(token).access_token;
+        break;
+      case 'refresh_token':
+        return_token = cookie.parse(token).refresh_token;
+      default:
+        break;
+    }
+    return return_token;
   }
 }

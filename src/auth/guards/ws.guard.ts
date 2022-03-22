@@ -11,11 +11,12 @@ export class WsGuard implements CanActivate {
     
     // TODO: when it comes to connection with refresh tokens, 
     // frontend should also for reconnect everytime /api/auth/refresh-token is issued
-    const bearerToken = await this.authService.returnAccessTokenFromCookie(
+    const bearerToken = await this.authService.returnTokenFromCookie(
       socket.request.headers.cookie!,
+      'access_token'
     );
     try {
-      const decodedToken = (await this.authService.verifyAccessToken(bearerToken)) as any;
+      const decodedToken = (await this.authService.verifyToken(bearerToken, 'access_token')) as any;
       if (decodedToken) {
         // we decoded the token so it is safe to asume it works
         socket.user = decodedToken;
