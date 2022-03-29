@@ -124,7 +124,8 @@ export class GameGateway
   // and then parse the game id which is submited
   @UseGuards(WsGuard)
   @SubscribeMessage('message')
-  handleMessage(client: any, payload: any): void {
-    this.logger.log(payload);
+  async handleMessage(client: any, payload: any): Promise<void> {
+    console.log(payload);
+    this.server.to(client.id).emit('found-game', {msg: 'This is the information about what went down.'});
   }
 }

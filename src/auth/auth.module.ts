@@ -12,7 +12,8 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtAuthGuard } from './guards/jwt.guard';
 import { WsGuard } from './guards/ws.guard';
-import { JwtInterceptor } from './jwt.interceptor';
+import { RefreshTokenInterceptor } from './refreshToken.interceptor';
+import { AccessTokenInterceptor } from './accessToken.interceptor';
 
 @Module({
   imports: [
@@ -23,7 +24,11 @@ import { JwtInterceptor } from './jwt.interceptor';
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '15m' },
+        signOptions: {
+          expiresIn: '15m',
+          issuer: 'chess.app',
+          audience: 'chess.app',
+        },
       }),
     }),
   ],
@@ -34,7 +39,8 @@ import { JwtInterceptor } from './jwt.interceptor';
     JwtStrategy,
     JwtAuthGuard,
     WsGuard,
-    JwtInterceptor
+    RefreshTokenInterceptor,
+    AccessTokenInterceptor
   ],
   controllers: [AuthController],
   exports: [
@@ -44,7 +50,8 @@ import { JwtInterceptor } from './jwt.interceptor';
     LocalAuthGuard,
     JwtAuthGuard,
     WsGuard,
-    JwtInterceptor
+    RefreshTokenInterceptor,
+    AccessTokenInterceptor
   ],
 })
 export class AuthModule {}

@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import * as cookie from 'cookie';
+import { User } from 'src/users-managment/schemas/user.schema';
 import { v4 as uuid } from 'uuid';
 import { UsersManagmentService } from '../users-managment/users-managment.service';
 import { ValidatedUser } from './interfaces/validated-user.interface';
@@ -17,7 +18,7 @@ export class AuthService {
   ) {}
 
   async validateUser(username: string, password: string) {
-    const user = await this.usersManagmentService.findOne(username);
+    const user = await this.usersManagmentService.findOne({username: username});
     if (!user) {
       this.logger.log(`User ${username} not found. Validation failed.`);
       return null;
@@ -38,9 +39,12 @@ export class AuthService {
   }
 
   async login(user: ValidatedUser) {
+    const dbUser = await this.usersManagmentService.findOne({ username: user.username });
     const payload = { username: user.username, role: user.role };
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: this.jwtService.sign(payload, {
+        subject: dbUser?.accountId
+      }),
     };
   }
 
@@ -49,19 +53,21 @@ export class AuthService {
     return this.jwtService.decode(token);
   }
 
-  async revokeRefreshToken(username: string) {
-    await this.usersManagmentService.updateRefreshToken(username, '');
+  async revokeRefreshToken(user: Partial<User>) {
+    await this.usersManagmentService.updateRefreshToken(user, '');
   }
 
   async issueRefreshToken(user: ValidatedUser) {
-    const payload = { username: user.username, role: user.role, id: uuid() };
+    const dbUser = await this.usersManagmentService.findOne({username: user.username});
+    const payload = { id: uuid() };
     await this.usersManagmentService.updateRefreshToken(
-      user.username,
+      user,
       payload.id,
     );
     const signedPayload = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('REFRESH_SECRET'),
-      expiresIn: '1d',
+      expiresIn: '604800000',
+      subject: dbUser?.accountId
     });
     return {
       refresh_token: signedPayload,

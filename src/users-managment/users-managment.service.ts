@@ -37,17 +37,19 @@ export class UsersManagmentService {
     return this.userModel.find().exec();
   }
 
-  async findOne(username: string): Promise<Query<User, UserDocument> | null> {
-    return this.userModel.findOne({ username: username }).exec();
+  async findOne(user: Partial<User>): Promise<Query<User, UserDocument> | null> {
+    return this.userModel.findOne({ ...user}).exec();
   }
 
-  async updateRefreshToken(username: string, token: string): Promise<any> {
+  async updateRefreshToken(user: Partial<User>, token: string): Promise<any> {
     return this.userModel
-      .updateOne({ username: username }, { $set: { refreshToken: token } })
+      .updateOne({ ...user }, { $set: { refreshToken: token } })
       .exec();
   }
 
-  async getRefreshTokenId(username: string): Promise<any> {
-    return this.userModel.findOne({username: username}, {refreshToken: 1}).exec();
+  async addNewGame(user: Partial<User>, id: string) {
+    return this.userModel
+      .updateOne({ ...user}, { $push: { games: id } })
+      .exec();
   }
 }

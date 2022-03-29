@@ -1,46 +1,131 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { v4 as uuid } from 'uuid';
 
 import { RedisService } from 'src/redis/redis.service';
 
-import { Match } from './schemas/match.schema';
 import { Lobby } from './interfaces/lobby.interface';
 import { SchemaFieldTypes } from 'redis';
 import { CreateLobbyDto } from './dtos/createLobby.dto';
+import { UsersManagmentService } from 'src/users-managment/users-managment.service';
+import { ChessService } from './chess.service';
+import { GameGateway } from './game.gateway';
 
+//await client.ft.search('idx:users', '@age:[0 30]');
 @Injectable()
-export class GameService {
-  private readonly logger: Logger = new Logger('GameService');
+export class GameService implements OnModuleInit {
+  private readonly logger: Logger = new Logger(GameService.name);
 
   constructor(
     private readonly redisService: RedisService,
+    private readonly usersManagmentService: UsersManagmentService,
+    private readonly chessService: ChessService,
+    private readonly gameGateway: GameGateway
   ) {}
 
-  async findGame(): Promise<Match> {
-    return {
-      gameId: '123',
-      black: '123',
-      white: '123',
-      pgn: '123',
-      fen: '123',
-      ongoing: true,
-      date: Date.now(),
-      result: '1/2-1/2'
-    };
+  async findGame(username: string, gameType: string): Promise<boolean> {
+    try {
+      // we get the needed user data
+      const dbUser = await this.usersManagmentService.findOne({username: username});
+
+      let elo;
+      switch (gameType) {
+        case 'bullet':
+          elo = dbUser?.eloBullet;
+          break;
+        case 'blitz':
+          elo = dbUser?.eloBlitz;
+          break;
+        case 'rapid':
+          elo = dbUser?.eloRapid;
+          break;
+        default:
+          throw new Error('Invalid game type.');
+      }
+
+      const gameUser: CreateLobbyDto = {
+        playerName: dbUser!.username,
+        gameType: gameType,
+        playerElo: elo!,
+      };
+
+      let isSearchOngoing = true;
+      let eloDifference = 10;
+      let lobby: any;
+      while (isSearchOngoing && eloDifference <= 50) {
+        lobby = await this.redisService.client.ft.search(
+          'idx:lobby',
+          `@gameType:${gameUser.gameType} @playerElo:[${
+            gameUser.playerElo - eloDifference
+          } ${gameUser.playerElo + eloDifference}]`,
+        );
+        if (lobby.total) {
+          isSearchOngoing = false;
+        } else {
+          eloDifference = eloDifference + 10;
+        }
+      }
+
+      switch (lobby.total) {
+        case 0:
+          await this.createLobby(gameUser);
+          return false;
+        case 1:
+          let matchLobby: Lobby = lobby.documents[0].value;
+          await this.chessService.createMatch(gameUser, matchLobby);
+          break;
+        default:
+          let lobbies = lobby.documents;
+          break;
+
+        // add logic emiting match data to both players - that's how they will find it
+      }
+    } catch (e) {
+      this.logger.error(e.message);
+    }
+    return true;
   }
 
-  async createLobby(createLobbyDto: CreateLobbyDto): Promise<Lobby> {
+  private async createLobby(createLobbyDto: CreateLobbyDto): Promise<Lobby> {
     // TODO: this could probably be happening on module instantiation,
     // not every time lobby is created ;)
+    const gameId = uuid();
+    const lobby = {
+      gameId: gameId,
+      creationTime: Date.now(),
+      gameType: createLobbyDto.gameType,
+      playerName: createLobbyDto.playerName,
+      playerElo: createLobbyDto.playerElo,
+    };
+
+    await this.redisService.client.hSet(`chess:lobby:${gameId}`, lobby);
+    return lobby;
+  }
+
+  async deleteLobby(username: string): Promise<boolean> {
+    try {
+      const lobby = await this.redisService.client.ft.search(
+        'idx:lobby',
+        `@playerName:${username}`,
+      );
+      await this.redisService.client.del(lobby.documents[0].id);
+      return true;
+    } catch (e) {
+      this.logger.debug(`Error while deleting lobby: ${e.message}`);
+      return false;
+    }
+  }
+
+
+  async onModuleInit() {
     try {
       await this.redisService.client.ft.create(
         'idx:lobby',
         {
           gameId: SchemaFieldTypes.TEXT,
-          creationTime: SchemaFieldTypes.NUMERIC,
+          gameType: SchemaFieldTypes.TEXT,
+          creationTime: SchemaFieldTypes.NUMERIC, 
           playerName: SchemaFieldTypes.TEXT,
           playerElo: SchemaFieldTypes.NUMERIC,
-          playerSocketId: SchemaFieldTypes.TEXT
         },
         {
           ON: 'HASH',
@@ -53,29 +138,6 @@ export class GameService {
       } else {
         this.logger.error('Error occured: ', e);
       }
-    }
-
-    const gameId = uuid();
-    const lobby = {
-      gameId: gameId,
-      creationTime: Date.now(),
-      playerName: createLobbyDto.playerName,
-      playerElo: createLobbyDto.playerElo,
-      playerSocketId: createLobbyDto.playerSocketId
-    };
-
-    await this.redisService.client.hSet(`chess:lobby:${gameId}`, lobby);
-    return lobby;
-  }
-
-  async deleteLobby(id: string): Promise<boolean> {
-    try {
-      const result = await this.redisService.client.del(`chess:lobby:${id}`);
-      return Boolean(result);
-    }
-    catch (e) {
-      this.logger.debug(`Error while deleting lobby: ${e}`);
-      return false;
     }
   }
 }

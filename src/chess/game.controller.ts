@@ -10,6 +10,7 @@ import {
   Delete,
   UseGuards,
   Req,
+  UseInterceptors,
 } from '@nestjs/common';
 
 import { GameService } from './game.service';
@@ -18,10 +19,12 @@ import { FindMatchDto } from './dtos/findMatch.dto';
 import { CreateLobbyDto } from './dtos/createLobby.dto';
 
 import { Lobby } from './interfaces/lobby.interface';
-import { Match } from './schemas/match.schema'
+import { Match } from './schemas/match.schema';
 import { Request, Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { RedisService } from '../redis/redis.service';
+import { GameGateway } from './game.gateway';
+import { AccessTokenInterceptor } from 'src/auth/accessToken.interceptor';
 
 // TODO: Implement logic when match is found:
 // When match is found:
@@ -35,30 +38,32 @@ import { RedisService } from '../redis/redis.service';
 @Controller('game-managment')
 export class GameController {
   private readonly logger: Logger = new Logger('GameController');
-  constructor(private readonly gameService: GameService, private readonly redisService: RedisService) {}
+  constructor(
+    private readonly gameService: GameService,
+  ) {}
 
   @UseGuards(JwtAuthGuard)
+  @UseInterceptors(AccessTokenInterceptor)
   @Post('match')
   async handleMatchSearch(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<Match | null> {
-    console.log(req.user!);
-    return {
-      gameId: '123',
-      black: '123',
-      white: '123',
-      pgn: '123',
-      fen: '123',
-      ongoing: true,
-      date: Date.now(),
-      result: '1/2-1/2'
-    };
+  ) {
+    const game = await this.gameService.findGame(
+      res.locals.access_token.username,
+      req.body.type,
+    );
+    if (game) {
+      return { message: 'Match found!', game: game }
+    }
+    else {
+      return { message: 'Match not found', game: game }
+    }
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('match/:id')
-  async handleGetMatch(@Param('id') id: string): Promise<Match> {
+  async handleGetMatch(@Param('id') id: string): Promise<any> {
     return {
       gameId: '123',
       black: '123',
@@ -67,29 +72,24 @@ export class GameController {
       fen: '123',
       ongoing: true,
       date: Date.now(),
-      result: '1/2-1/2'
+      result: '1/2-1/2',
     };
   }
 
+  // can't play more than one match, no need to identify lobbies by id
   @UseGuards(JwtAuthGuard)
-  @Post('lobby')
-  async handleLobbyCreation(
-    @Body() createLobbyDto: CreateLobbyDto,
-  ): Promise<Lobby> {
-    const lobby = await this.gameService.createLobby(createLobbyDto);
-    return lobby;
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Delete('lobby/:id')
+  @UseInterceptors(AccessTokenInterceptor)
+  @Delete('lobby')
   async handleLobbyDeletion(
-    @Param('id') id: string,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<void> {
-    const deleteLobby = await this.gameService.deleteLobby(id);
+  ): Promise<any> {
+    const deleteLobby = await this.gameService.deleteLobby(res.locals.access_token.username);
     if (deleteLobby) {
-      res.status(HttpStatus.OK).send();
+      res.status(HttpStatus.OK);
+      return { message: "OK" };
+    } else {
+      res.status(HttpStatus.NOT_FOUND);
+      return { message: "NOT_FOUND" };
     }
-    res.status(HttpStatus.NOT_FOUND).send();
   }
 }

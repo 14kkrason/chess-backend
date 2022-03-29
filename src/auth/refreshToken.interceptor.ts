@@ -2,13 +2,15 @@ import {
   CallHandler,
   ExecutionContext,
   Injectable,
+  Logger,
   NestInterceptor,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
 
 @Injectable()
-export class JwtInterceptor implements NestInterceptor {
+export class RefreshTokenInterceptor implements NestInterceptor {
+  logger: Logger = new Logger(RefreshTokenInterceptor.name);
   constructor(private readonly authService: AuthService) {}
 
   async intercept(
@@ -19,33 +21,26 @@ export class JwtInterceptor implements NestInterceptor {
     let response = context.switchToHttp().getResponse();
     try {
       if (request.headers.cookie) {
-        // get refresh token
+        // get access token
         const refreshTokenCookie = await this.authService.returnTokenFromCookie(
           request.headers.cookie!,
           'refresh_token',
         );
         const refreshToken = await this.authService.verifyToken(
           refreshTokenCookie,
-          'refresh_token',
+          'refresh_token'
         );
 
-        // get access token
-
-
-        const accessTokenCookie = await this.authService.returnTokenFromCookie(
-          request.headers.cookie!,
-          'access_token',
-        );
-        const accessToken = await this.authService.verifyToken(
-          accessTokenCookie,
-          'access_token',
-        );
-
-        response.locals.access_token = accessToken;
         response.locals.refresh_token = refreshToken;
       }
     } catch (e) {
-      console.log(e);
+      if (e.message === 'jwt must be provided') {
+        this.logger.debug(`No refresh token for user: ${e.message}`);
+      }
+      else {
+        this.logger.error(e.message);
+      }
+      
     } finally {
       return next.handle();
     }

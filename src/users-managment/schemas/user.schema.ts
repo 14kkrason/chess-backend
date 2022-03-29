@@ -8,8 +8,7 @@ interface progression {
 }
 
 interface game {
-  id: string,
-  color: string
+  id: string
 }
 
 @Schema()
@@ -33,7 +32,7 @@ export class User {
   registrationDate: number;
 
   @Prop({ required: true, default: 800 })
-  eloSpeed: number;
+  eloRapid: number;
 
   @Prop({ required: true, default: 800 })
   eloBlitz: number;
@@ -42,7 +41,7 @@ export class User {
   eloBullet: number;
 
   @Prop({ required: true, default: [{ elo: 800, date: Date.now() }] })
-  eloProgressionSpeed: progression[]
+  eloProgressionRapid: progression[]
 
   @Prop({ required: true, default: [{ elo: 800, date: Date.now() }] })
   eloProgressionBlitz: progression[]

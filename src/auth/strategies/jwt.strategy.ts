@@ -11,9 +11,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     public readonly authService: AuthService,
   ) {
     super({
-      jwtFromRequest: (req: any) => {
+      jwtFromRequest: (req: any, res: any) => {
         let token = null;
-        if (req && req.cookies) token = req.cookies['access_token'];
+        if (req && req.cookies) {
+          token = req.cookies['access_token'];
+        } 
         return token;
       },
       ignoreExpiration: false,
