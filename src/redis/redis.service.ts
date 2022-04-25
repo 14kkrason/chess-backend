@@ -1,11 +1,13 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { ConfigFactory, ConfigService } from '@nestjs/config';
-import { createClient } from 'redis';
+import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { createClient, RedisClientType, RedisModules, RedisScripts} from 'redis';
+
 
 // this service is only exposing the client
 @Injectable()
 export class RedisService {
-  public client: any;
+  public client: ReturnType<typeof createClient>;
+  // TODO: setup publisher and subscriber for all your publish/subscribe needs
   private readonly logger = new Logger('RedisService');
 
   constructor(private readonly configService: ConfigService) {

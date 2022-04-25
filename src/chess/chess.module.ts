@@ -9,6 +9,8 @@ import { AuthModule } from '../auth/auth.module';
 import { MatchService } from './match.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Match, MatchSchema } from './schemas/match.schema';
+import { TimerService } from './timer.service';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -16,8 +18,9 @@ import { Match, MatchSchema } from './schemas/match.schema';
     UsersManagmentModule,
     AuthModule,
     MongooseModule.forFeature([{ name: Match.name, schema: MatchSchema }]),
+    ScheduleModule.forRoot()
   ],
   controllers: [GameController],
-  providers: [GameService, ChessService, GameGateway, MatchService],
+  providers: [GameService, ChessService, GameGateway, MatchService, TimerService],
 })
 export class ChessModule {}

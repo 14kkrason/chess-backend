@@ -9,8 +9,6 @@ export class WsGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<any> {
     let socket = context.switchToWs().getClient();
     
-    // TODO: when it comes to connection with refresh tokens, 
-    // frontend should also for reconnect everytime /api/auth/refresh-token is issued
     const bearerToken = await this.authService.returnTokenFromCookie(
       socket.request.headers.cookie!,
       'access_token'

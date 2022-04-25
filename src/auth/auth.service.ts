@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import * as cookie from 'cookie';
+import { RedisService } from 'src/redis/redis.service';
 import { User } from 'src/users-managment/schemas/user.schema';
 import { v4 as uuid } from 'uuid';
 import { UsersManagmentService } from '../users-managment/users-managment.service';
@@ -15,10 +16,13 @@ export class AuthService {
     private readonly usersManagmentService: UsersManagmentService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly redisService: RedisService,
   ) {}
 
   async validateUser(username: string, password: string) {
-    const user = await this.usersManagmentService.findOne({username: username});
+    const user = await this.usersManagmentService.findOne({
+      username: username,
+    });
     if (!user) {
       this.logger.log(`User ${username} not found. Validation failed.`);
       return null;
@@ -39,11 +43,13 @@ export class AuthService {
   }
 
   async login(user: ValidatedUser) {
-    const dbUser = await this.usersManagmentService.findOne({ username: user.username });
+    const dbUser = await this.usersManagmentService.findOne({
+      username: user.username,
+    });
     const payload = { username: user.username, role: user.role };
     return {
       access_token: this.jwtService.sign(payload, {
-        subject: dbUser?.accountId
+        subject: dbUser?.accountId,
       }),
     };
   }
@@ -58,16 +64,15 @@ export class AuthService {
   }
 
   async issueRefreshToken(user: ValidatedUser) {
-    const dbUser = await this.usersManagmentService.findOne({username: user.username});
+    const dbUser = await this.usersManagmentService.findOne({
+      username: user.username,
+    });
     const payload = { id: uuid() };
-    await this.usersManagmentService.updateRefreshToken(
-      user,
-      payload.id,
-    );
+    await this.usersManagmentService.updateRefreshToken(user, payload.id);
     const signedPayload = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('REFRESH_SECRET'),
       expiresIn: '604800000',
-      subject: dbUser?.accountId
+      subject: dbUser?.accountId,
     });
     return {
       refresh_token: signedPayload,
@@ -91,7 +96,7 @@ export class AuthService {
     return return_token;
   }
 
-  async returnTokenFromCookie(token: string, type: string): Promise<string>{
+  async returnTokenFromCookie(token: string, type: string): Promise<string> {
     let return_token = '';
     switch (type) {
       case 'access_token':
@@ -103,5 +108,27 @@ export class AuthService {
         break;
     }
     return return_token;
+  }
+
+  async isPlayerAllowedToStartTimer(
+    gameId: string,
+    playerId: string,
+    color: string,
+  ): Promise<boolean> { 
+    const cachedMatch = await this.redisService.client.hGetAll(
+      `chess:match:${gameId}`,
+    );
+    if(!cachedMatch) {
+      return false;
+    }
+
+    if (color === 'white' || color === 'w') {
+      return playerId === cachedMatch.whiteId;
+    }
+    else if (color === 'black' || color === 'b') {
+      return playerId === cachedMatch.blackId;
+    }
+
+    return false;
   }
 }

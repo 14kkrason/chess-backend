@@ -9,8 +9,10 @@ import { CreateLobbyDto } from './dtos/createLobby.dto';
 import { UsersManagmentService } from 'src/users-managment/users-managment.service';
 import { ChessService } from './chess.service';
 import { GameGateway } from './game.gateway';
+import { MatchClientInformation } from './interfaces/matchClientInformation.interface';
+import { TimerService } from './timer.service';
+import { MatchService } from './match.service';
 
-//await client.ft.search('idx:users', '@age:[0 30]');
 @Injectable()
 export class GameService implements OnModuleInit {
   private readonly logger: Logger = new Logger(GameService.name);
@@ -19,13 +21,20 @@ export class GameService implements OnModuleInit {
     private readonly redisService: RedisService,
     private readonly usersManagmentService: UsersManagmentService,
     private readonly chessService: ChessService,
-    private readonly gameGateway: GameGateway
+    private readonly gameGateway: GameGateway,
+    private readonly timerService: TimerService,
+    private readonly matchService: MatchService,
   ) {}
 
-  async findGame(username: string, gameType: string): Promise<boolean> {
+  async findGame(
+    username: string,
+    gameType: string,
+  ): Promise<Partial<MatchClientInformation> | boolean> {
     try {
       // we get the needed user data
-      const dbUser = await this.usersManagmentService.findOne({username: username});
+      const dbUser = await this.usersManagmentService.findOne({
+        username: username,
+      });
 
       let elo;
       switch (gameType) {
@@ -65,29 +74,119 @@ export class GameService implements OnModuleInit {
         }
       }
 
+      let matchInfo: MatchClientInformation;
+      let matchLobby: Lobby;
       switch (lobby.total) {
         case 0:
           await this.createLobby(gameUser);
           return false;
         case 1:
-          let matchLobby: Lobby = lobby.documents[0].value;
-          await this.chessService.createMatch(gameUser, matchLobby);
+          matchLobby = lobby.documents[0].value;
+          matchInfo = await this.chessService.createMatch(gameUser, matchLobby);
           break;
         default:
-          let lobbies = lobby.documents;
+          // get lobby that is waiting for the longest time (https://www.youtube.com/watch?v=a_XgQhMPeEQ)
+          let lobbies = lobby.documents.sort((a: Lobby, b: Lobby) =>
+            a.creationTime > b.creationTime ? 1 : -1,
+          );
+          matchLobby = lobbies[0];
+          matchInfo = await this.chessService.createMatch(gameUser, matchLobby);
           break;
-
-        // add logic emiting match data to both players - that's how they will find it
       }
+
+      await this.timerService.createRedisTimers(
+        matchInfo.newPlayer.gameId,
+        gameType,
+      );
+      await this.deleteLobby(matchLobby.playerName);
+
+      const lobbyUser = await this.redisService.client.hGetAll(
+        `chess:socketUser:${matchLobby.playerName}`,
+      );
+      
+      this.gameGateway.server
+        .to(lobbyUser.socketId)
+        .emit('found-game', matchInfo.lobbyPlayer);
+
+      return { newPlayer: matchInfo.newPlayer };
     } catch (e) {
       this.logger.error(e.message);
+      return false;
     }
-    return true;
+  }
+
+  async getOngoingGameData(gameId: string, requesterColor: string) {
+    // we signal we are ready to play, when don't care if we already did
+    const gameIdentifier = `chess:match:${gameId}`;
+    const playerReady = `${requesterColor}Ready`;
+    await this.redisService.client.hSet(gameIdentifier, playerReady, 1);
+
+    const cachedMatch = await this.redisService.client.hGetAll(
+      `chess:match:${gameId}`,
+    );
+
+    if (!cachedMatch) {
+      return {
+        status: 'game-ended',
+        message: 'Game already ended or has not started yet',
+      };
+    }
+
+    if (cachedMatch.whiteReady === '1' && cachedMatch.blackReady === '1') {
+      // both players are ready, we send the info to them
+      const whiteSocketUser = await this.redisService.client.hGetAll(
+        `chess:socketUser:${cachedMatch.white}`,
+      );
+      const blackSocketUser = await this.redisService.client.hGetAll(
+        `chess:socketUser:${cachedMatch.black}`,
+      );
+
+      const match = await this.matchService.getMatch(gameId);
+
+      if (!match) {
+        // there should probably be some graceful handling
+        // of this abomination of a case
+        throw new Error('Match was null, game aborted???');
+      }
+
+      const whiteTimer = await this.redisService.client.get(
+        `timer:white:${gameId}`,
+      );
+      const blackTimer = await this.redisService.client.get(
+        `timer:black:${gameId}`,
+      );
+
+      this.gameGateway.server
+        .to(whiteSocketUser.socketId)
+        .emit('game-is-ready', {
+          ...cachedMatch,
+          whiteTimer: whiteTimer,
+          blackTimer: blackTimer,
+          pgn: match.pgn,
+          color: 'w',
+        });
+
+      this.gameGateway.server
+        .to(blackSocketUser.socketId)
+        .emit('game-is-ready', {
+          ...cachedMatch,
+          whiteTimer: whiteTimer,
+          blackTimer: blackTimer,
+          pgn: match.pgn,
+          color: 'b',
+        });
+      return { status: 'game-is-ready', message: 'Game data was returned' };
+    } else {
+      return { status: 'game-not-ready', message: 'Game is not ready yet.' }
+    }
+  }
+
+  async endGame(reason: string, color: string, gameId: string): Promise<void> {
+    // TODO: implement method for ending games: via checkmate or timeout
+    console.log('Game is over');
   }
 
   private async createLobby(createLobbyDto: CreateLobbyDto): Promise<Lobby> {
-    // TODO: this could probably be happening on module instantiation,
-    // not every time lobby is created ;)
     const gameId = uuid();
     const lobby = {
       gameId: gameId,
@@ -115,7 +214,6 @@ export class GameService implements OnModuleInit {
     }
   }
 
-
   async onModuleInit() {
     try {
       await this.redisService.client.ft.create(
@@ -123,7 +221,7 @@ export class GameService implements OnModuleInit {
         {
           gameId: SchemaFieldTypes.TEXT,
           gameType: SchemaFieldTypes.TEXT,
-          creationTime: SchemaFieldTypes.NUMERIC, 
+          creationTime: SchemaFieldTypes.NUMERIC,
           playerName: SchemaFieldTypes.TEXT,
           playerElo: SchemaFieldTypes.NUMERIC,
         },

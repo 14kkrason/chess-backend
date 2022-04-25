@@ -37,15 +37,27 @@ export class MatchService implements OnModuleInit {
     gameType: string,
     whiteId: string,
     blackId: string,
+    white: string,
+    black: string,
   ) {
     return this.redisService.client.hSet(`chess:match:${gameId}`, {
       gameId: gameId,
       gameType: gameType,
       whiteId: whiteId,
       blackId: blackId,
+      white: white,
+      black: black,
       whiteReady: 0,
-      blackReady: 0
+      blackReady: 0,
     });
+  }
+
+  async getMatch(gameId: string) {
+    return this.matchModel.findOne({ gameId: gameId });
+  }
+
+  async updatePgn(gameId: string, pgn: string) {
+    return this.matchModel.findOneAndUpdate({ gameId: gameId }, { pgn: pgn });
   }
 
   async onModuleInit() {
@@ -57,12 +69,14 @@ export class MatchService implements OnModuleInit {
           gameType: SchemaFieldTypes.TEXT,
           whiteId: SchemaFieldTypes.TEXT,
           blackId: SchemaFieldTypes.TEXT,
+          white: SchemaFieldTypes.TEXT,
+          black: SchemaFieldTypes.TEXT,
           whiteReady: SchemaFieldTypes.NUMERIC,
-          blackReady: SchemaFieldTypes.NUMERIC
+          blackReady: SchemaFieldTypes.NUMERIC,
         },
         {
           ON: 'HASH',
-          PREFIX: 'chess:lobby',
+          PREFIX: 'chess:match',
         },
       );
     } catch (e) {

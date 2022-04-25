@@ -6,7 +6,7 @@ import { MatchService } from './match.service';
 import { Lobby } from './interfaces/lobby.interface';
 import { Match } from './schemas/match.schema';
 import { RedisService } from 'src/redis/redis.service';
-import { GameGateway } from './game.gateway';
+import { MatchClientInformation } from './interfaces/matchClientInformation.interface';
 
 @Injectable()
 export class ChessService {
@@ -16,9 +16,12 @@ export class ChessService {
     private readonly redisService: RedisService,
   ) {}
 
-
   // TODO: move this to match service
-  async createMatch(newPlayer: CreateLobbyDto, lobby: Lobby) {
+  // TODO: create new DTO for player creation
+  async createMatch(
+    newPlayer: CreateLobbyDto,
+    lobby: Lobby,
+  ): Promise<MatchClientInformation> {
     const randomizer = Math.floor(Math.random() * 100);
     const newPlayerDbUser = await this.userMangamentService.findOne({
       username: newPlayer.playerName,
@@ -46,39 +49,64 @@ export class ChessService {
     };
 
     const pgn = await this.generateStartingPGN(match);
-    const result = await this.matchService.create({ ...match, pgn });
+    await this.matchService.create({ ...match, pgn });
 
     await Promise.all([
       // TODO: we can uncomment this later, we dont care now, will only mess things
-     /*  this.userMangamentService.addNewGame(
+      /*  this.userMangamentService.addNewGame(
         { accountId: newPlayerDbUser?.accountId },
         match.gameId,
       ),
       this.userMangamentService.addNewGame(
         { accountId: lobbyDbUser?.accountId },
-        match.gameId,
+        match.gameId,   
       ), */
       this.matchService.createMatchCache(
         match.gameId!,
         match.type!,
         match.whiteId!,
-        match.blackId!
-      )
+        match.blackId!,
+        match.white!,
+        match.black!,
+      ),
     ]);
 
-    if(randomizer % 2 === 0) {
-      // new player is white
-      // TODO: finish this function and get on with implementing gameplay
-      // we will set this in a public cookie
-    }
-    else {
-      // new player is black
-      console.log('White: ', match.white);
-      console.log('Black: ', match.black);
-    }
-
-    // console.log(result);
+    return {
+      newPlayer: {
+        gameId: match.gameId,
+        color: randomizer % 2 === 0 ? 'white' : 'black',
+        type: match.type,
+      },
+      lobbyPlayer: {
+        gameId: match.gameId,
+        color: randomizer % 2 === 0 ? 'black' : 'white',
+        type: match.type,
+      },
+    };
   }
+
+  // TODO: create method for ending games
+  async endGame() {
+
+  }
+
+  async makeMove(gameId: string, move: string) {
+    const match = await this.matchService.getMatch(gameId);
+    if(!match) {
+      throw new Error('Match does not exist');
+    }
+    const chess = new Chess();
+    chess.load_pgn(match?.pgn);
+    const newMove = chess.move(move, { sloppy: true }); 
+    const pgn = await this.matchService.updatePgn(gameId, chess.pgn({ newline_char: '\n' }));
+    console.log(pgn!.pgn);
+    console.log(newMove);
+    if (pgn) {
+      return true;
+    }
+    return false;
+  }
+
 
   private async generateStartingPGN(match: Partial<Match>): Promise<string> {
     const chess = new Chess();

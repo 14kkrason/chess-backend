@@ -14,17 +14,11 @@ import {
 } from '@nestjs/common';
 
 import { GameService } from './game.service';
-
-import { FindMatchDto } from './dtos/findMatch.dto';
-import { CreateLobbyDto } from './dtos/createLobby.dto';
-
-import { Lobby } from './interfaces/lobby.interface';
-import { Match } from './schemas/match.schema';
 import { Request, Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
-import { RedisService } from '../redis/redis.service';
-import { GameGateway } from './game.gateway';
 import { AccessTokenInterceptor } from 'src/auth/accessToken.interceptor';
+import { AuthService } from 'src/auth/auth.service';
+import { TimerService } from './timer.service';
 
 // TODO: Implement logic when match is found:
 // When match is found:
@@ -40,6 +34,8 @@ export class GameController {
   private readonly logger: Logger = new Logger('GameController');
   constructor(
     private readonly gameService: GameService,
+    private readonly authService: AuthService,
+    private readonly timerService: TimerService,
   ) {}
 
   @UseGuards(JwtAuthGuard)
@@ -54,11 +50,23 @@ export class GameController {
       req.body.type,
     );
     if (game) {
-      return { message: 'Match found!', game: game }
+      return { message: 'Match found!', game: game };
+    } else {
+      return { message: 'Match not found', game: game };
     }
-    else {
-      return { message: 'Match not found', game: game }
-    }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('ongoing-game-data')
+  async getOngoingGameData(@Req() req: Request) {
+    // TODO: CONTINUE HERE
+    // it is not this elements responsibility to inform about starting any countdown, this will be achieved
+    // in timers.service.ts
+    const result = await this.gameService.getOngoingGameData(
+      req.body.gameId,
+      req.body.color,
+    );
+    return result;
   }
 
   @UseGuards(JwtAuthGuard)
@@ -83,13 +91,43 @@ export class GameController {
   async handleLobbyDeletion(
     @Res({ passthrough: true }) res: Response,
   ): Promise<any> {
-    const deleteLobby = await this.gameService.deleteLobby(res.locals.access_token.username);
+    const deleteLobby = await this.gameService.deleteLobby(
+      res.locals.access_token.username,
+    );
     if (deleteLobby) {
       res.status(HttpStatus.OK);
-      return { message: "OK" };
+      return { message: 'OK' };
     } else {
       res.status(HttpStatus.NOT_FOUND);
-      return { message: "NOT_FOUND" };
+      return { message: 'NOT_FOUND' };
     }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(AccessTokenInterceptor)
+  @Post('timer')
+  async startTimer(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<any> {
+    const isAllowed = await this.authService.isPlayerAllowedToStartTimer(
+      req.body.gameId,
+      res.locals.access_token.sub,
+      req.body.color,
+    );  
+
+    if (!isAllowed) {
+      res.status(HttpStatus.UNAUTHORIZED);
+      return { message: 'User is not authorized to start the timer.' };
+    }
+
+    const leftTime = await this.timerService.startTimer(
+      req.body.gameId,
+      req.body.color,
+    );
+    
+    console.log(leftTime);
+
+    return { leftTime: leftTime };
   }
 }

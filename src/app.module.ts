@@ -9,7 +9,6 @@ import { ChessModule } from './chess/chess.module';
 import { AuthModule } from './auth/auth.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
-import { TimerModule } from './timer/timer.module';
 
 @Module({
   imports: [
@@ -29,7 +28,6 @@ import { TimerModule } from './timer/timer.module';
       rootPath: join(__dirname, '..', 'test-client'),
       exclude: ['/api*']
     }),
-    TimerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -14,6 +14,7 @@ import { JwtAuthGuard } from './guards/jwt.guard';
 import { WsGuard } from './guards/ws.guard';
 import { RefreshTokenInterceptor } from './refreshToken.interceptor';
 import { AccessTokenInterceptor } from './accessToken.interceptor';
+import { RedisModule } from 'src/redis/redis.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { AccessTokenInterceptor } from './accessToken.interceptor';
         },
       }),
     }),
+    RedisModule,
   ],
   providers: [
     AuthService,
