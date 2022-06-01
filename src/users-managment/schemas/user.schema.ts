@@ -1,7 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
-
 interface progression {
   elo: number,
   date: number
@@ -53,7 +52,7 @@ export class User {
   role: string;
 
   @Prop({ default: [] })
-  games: game[];
+  games: string[];
 
   @Prop()
   description: string;

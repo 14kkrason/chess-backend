@@ -26,7 +26,7 @@ import { RedisModule } from 'src/redis/redis.module';
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
         signOptions: {
-          expiresIn: '15m',
+          expiresIn: '60m',
           issuer: 'chess.app',
           audience: 'chess.app',
         },

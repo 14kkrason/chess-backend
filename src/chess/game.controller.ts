@@ -29,7 +29,7 @@ import { TimerService } from './timer.service';
 // 5. Use this id when playing the game and making moves in the ChessboardComponent
 // 6. If the game is over do a graceful teardown, destroy the room and such
 
-@Controller('game-managment')
+@Controller('game-management')
 export class GameController {
   private readonly logger: Logger = new Logger('GameController');
   constructor(

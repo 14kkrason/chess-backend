@@ -9,6 +9,10 @@ import { v4 as uuid } from 'uuid';
 import { UsersManagmentService } from '../users-managment/users-managment.service';
 import { ValidatedUser } from './interfaces/validated-user.interface';
 
+import * as crypto from 'crypto';
+import { promisify } from 'util';
+const randomBytesAsync = promisify(crypto.randomBytes);
+
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -71,7 +75,7 @@ export class AuthService {
     await this.usersManagmentService.updateRefreshToken(user, payload.id);
     const signedPayload = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('REFRESH_SECRET'),
-      expiresIn: '604800000',
+      expiresIn: '7d',
       subject: dbUser?.accountId,
     });
     return {
@@ -114,21 +118,30 @@ export class AuthService {
     gameId: string,
     playerId: string,
     color: string,
-  ): Promise<boolean> { 
+  ): Promise<boolean> {
     const cachedMatch = await this.redisService.client.hGetAll(
       `chess:match:${gameId}`,
     );
-    if(!cachedMatch) {
+    if (!cachedMatch) {
       return false;
     }
 
     if (color === 'white' || color === 'w') {
       return playerId === cachedMatch.whiteId;
-    }
-    else if (color === 'black' || color === 'b') {
+    } else if (color === 'black' || color === 'b') {
       return playerId === cachedMatch.blackId;
     }
 
     return false;
+  }
+
+  async generatePassword() {
+    const size = crypto.randomInt(12, 24);
+    const bytes = await randomBytesAsync(size);
+    return crypto
+      .createHash('sha256')
+      .update(bytes)
+      .digest('hex')
+      .slice(0, size + 16); // we do this to add variety - between 28 and 40 chars
   }
 }

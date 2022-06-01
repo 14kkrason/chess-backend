@@ -60,7 +60,8 @@ export class GameService implements OnModuleInit {
       let isSearchOngoing = true;
       let eloDifference = 10;
       let lobby: any;
-      while (isSearchOngoing && eloDifference <= 50) {
+      // TODO: change these values later
+      while (isSearchOngoing && eloDifference <= 200) {
         lobby = await this.redisService.client.ft.search(
           'idx:lobby',
           `@gameType:${gameUser.gameType} @playerElo:[${
@@ -70,7 +71,7 @@ export class GameService implements OnModuleInit {
         if (lobby.total) {
           isSearchOngoing = false;
         } else {
-          eloDifference = eloDifference + 10;
+          eloDifference = eloDifference + 30;
         }
       }
 
@@ -179,11 +180,6 @@ export class GameService implements OnModuleInit {
     } else {
       return { status: 'game-not-ready', message: 'Game is not ready yet.' }
     }
-  }
-
-  async endGame(reason: string, color: string, gameId: string): Promise<void> {
-    // TODO: implement method for ending games: via checkmate or timeout
-    console.log('Game is over');
   }
 
   private async createLobby(createLobbyDto: CreateLobbyDto): Promise<Lobby> {

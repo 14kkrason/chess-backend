@@ -52,12 +52,51 @@ export class MatchService implements OnModuleInit {
     });
   }
 
+  async deleteMatchCache(gameId: string): Promise<number> {
+    return this.redisService.client.del(`chess:match:${gameId}`);
+  }
+
   async getMatch(gameId: string) {
     return this.matchModel.findOne({ gameId: gameId });
   }
 
   async updatePgn(gameId: string, pgn: string) {
     return this.matchModel.findOneAndUpdate({ gameId: gameId }, { pgn: pgn });
+  }
+
+  async updateEloChange(
+    gameId: string,
+    blackEloChange: number,
+    whiteEloChange: number,
+  ) {
+    return this.matchModel.findOneAndUpdate(
+      { gameId: gameId },
+      { blackEloChange: blackEloChange, whiteEloChange: whiteEloChange },
+    );
+  }
+
+  async endMatch(gameId: string, result: string) {
+    return this.matchModel.findOneAndUpdate(
+      { gameId: gameId },
+      { ongoing: false, result: result },
+    );
+  }
+
+  async getProfileGameInformation(gameIds: string[]) {
+    return this.matchModel.find(
+      { gameId: { $in: gameIds } },
+      {
+        gameId: 1,
+        type: 1,
+        date: 1,
+        whiteElo: 1,
+        blackElo: 1,
+        white: 1,
+        black: 1,
+        result: 1,
+        pgn: 1,
+      },
+    );
   }
 
   async onModuleInit() {

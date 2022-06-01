@@ -1,12 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { RedisService } from 'src/redis/redis.service';
+import { TimeoutEvent } from './interfaces/timeout-event.interface';
 @Injectable()
 export class TimerService {
   private readonly logger: Logger = new Logger(TimerService.name);
   constructor(
     private readonly redisService: RedisService,
     private readonly schedulerRegistry: SchedulerRegistry,
+    private readonly eventEmitter: EventEmitter2
   ) {}
 
   async createRedisTimers(gameId: string, gameType: string): Promise<boolean> {
@@ -46,8 +49,14 @@ export class TimerService {
         `timer:${color}:${gameId}`,
       );
 
-      if (timeLeft == 0) {
-        // we should signal that the game is over
+      if (timeLeft === 0) {
+        this.eventEmitter.emit(
+          'timeout',
+          {
+            gameId: gameId,
+            color: color
+          }
+        )
       }
     };
 
@@ -61,16 +70,12 @@ export class TimerService {
 
     // we create a timer that decreases number of seconds by one every second
     try {
+      const _ = this.schedulerRegistry.getInterval(`timer:${color}:${gameId}`);
+    } catch (e) {
+      // only if the timer DOESN'T exist we create it
       const timer = setInterval(cb, 1000, gameId, color);
       this.schedulerRegistry.addInterval(`timer:${color}:${gameId}`, timer);
       this.logger.verbose('Timer created.');
-    } catch (e) {
-      const timerErrorMatcher = /Interval with the given/gm;
-      if (e.message.match(timerErrorMatcher)) {
-        this.logger.debug('This timer already exists, we ignore creation.');
-      } else {
-        this.logger.error(e.message);
-      }
     } finally {
       return redisTimer;
     }

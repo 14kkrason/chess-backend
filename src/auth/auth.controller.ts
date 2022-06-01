@@ -1,8 +1,7 @@
+import { MailerService } from '@nestjs-modules/mailer';
 import {
   Body,
   Controller,
-  Get,
-  HttpCode,
   HttpStatus,
   Logger,
   Post,
@@ -20,12 +19,15 @@ import { JwtAuthGuard } from './guards/jwt.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { RefreshTokenInterceptor } from './refreshToken.interceptor';
 
+import { v4 as uuidv4 } from 'uuid';
+
 @Controller('auth')
 export class AuthController {
   private readonly logger: Logger = new Logger(AuthController.name);
   constructor(
     private readonly authService: AuthService,
     private readonly usersManagmentService: UsersManagmentService,
+    private readonly mailerService: MailerService,
   ) {}
 
   @UseGuards(LocalAuthGuard)
@@ -61,18 +63,6 @@ export class AuthController {
     return { message: 'Logout successful.' };
   }
 
-  @Post('register')
-  async handleUserRegistration(
-    @Body() createUserDto: CreateUserDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    const user = await this.usersManagmentService.create(createUserDto);
-    if (user) {
-      return user.username;
-    }
-    res.status(HttpStatus.BAD_REQUEST);
-    return "Can't add user, login is already taken.";
-  }
 
   @Post('refresh-token')
   @UseInterceptors(RefreshTokenInterceptor)
@@ -145,5 +135,36 @@ export class AuthController {
         this.logger.error(`Error while refreshing token: ${e}`);
       }
     }
+  }
+
+  @Post('reset-password')
+  async resetPassword(
+    @Body('username') username: string,
+    @Body('email') email: string,
+  ) {
+    const userEmail = await this.usersManagmentService.getUserEmail(username);
+    console.log(userEmail);
+    if (userEmail?.email === email) {
+      const newPassword = await this.authService.generatePassword();
+
+      const _ = await this.usersManagmentService.changePassword(
+        userEmail.accountId,
+        newPassword,
+      );
+
+      const result = await this.mailerService.sendMail({
+        to: email,
+        from: 's196076@sggw.edu.pl',
+        subject: `Request to reset your password - ${username}`,
+        template: 'index',
+        context: {
+          code: newPassword,
+          username: username,
+        },
+      });
+
+      console.log(result);
+    }
+    return { message: 'Reset recieved' };
   }
 }
