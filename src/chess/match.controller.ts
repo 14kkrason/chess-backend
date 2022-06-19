@@ -2,7 +2,7 @@ import { Controller, Get, Query } from '@nestjs/common';
 import { UsersManagmentService } from 'src/users-managment/users-managment.service';
 import { MatchService } from './match.service';
 
-@Controller('match-managment')
+@Controller('match-management')
 export class MatchController {
   constructor(private readonly matchService: MatchService, private readonly userManagmentService: UsersManagmentService) {}
 

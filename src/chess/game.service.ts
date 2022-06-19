@@ -126,7 +126,8 @@ export class GameService implements OnModuleInit {
       `chess:match:${gameId}`,
     );
 
-    if (!cachedMatch) {
+    if (cachedMatch.gameId == null) {
+      await this.redisService.client.del(gameIdentifier);
       return {
         status: 'game-ended',
         message: 'Game already ended or has not started yet',

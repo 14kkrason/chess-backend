@@ -15,9 +15,9 @@ export interface GameResult {
   gainBlack: number;
 }
 
-// TODO: change name to something more fitting, 
+// TODO: change name to something more fitting,
 // TODO: move to separate file
-// 
+//
 export interface MoveResult {
   status: 'ongoing' | 'draw' | 'loss' | 'win';
   reason: string | null;
@@ -76,8 +76,8 @@ export class ChessService {
       ),
       this.userMangamentService.addNewGame(
         { accountId: lobbyDbUser?.accountId },
-        match.gameId,   
-      ), 
+        match.gameId,
+      ),
       this.matchService.createMatchCache(
         match.gameId!,
         match.type!,
@@ -113,8 +113,10 @@ export class ChessService {
     }
     const chess = new Chess();
     chess.load_pgn(match?.pgn);
+
+    const isCorrectTurn = chess.turn() === color[0];
     const newMove = chess.move(move, { sloppy: true });
-    if (newMove) {
+    if (newMove && isCorrectTurn) {
       await this.matchService.updatePgn(
         gameId,
         chess.pgn({ newline_char: '\n' }),
@@ -142,7 +144,11 @@ export class ChessService {
         moveResult.reason = 'stalemate';
         return moveResult;
       } else if (chess.in_threefold_repetition()) {
-        moveResult.result = await this.endGame('threefold_repetition', color, gameId);
+        moveResult.result = await this.endGame(
+          'threefold_repetition',
+          color,
+          gameId,
+        );
         moveResult.status = 'draw';
         moveResult.reason = 'threefold_repetition';
         return moveResult;
@@ -156,7 +162,6 @@ export class ChessService {
     return moveResult;
   }
 
-  // TODO: create method for ending games
   async endGame(
     reason: string,
     color: string,
@@ -173,26 +178,26 @@ export class ChessService {
       case 'stalemate':
       case 'threefold_repetition':
         result = await this.calculateEloGain(0.5, match);
-        resultToString = '1 - 1';
+        resultToString = '1/2 - 1/2';
         break;
       case 'checkmate':
         if (color === 'white') {
           result = await this.calculateEloGain(1, match);
-          resultToString = '1 - 0'
+          resultToString = '1 - 0';
         } else if (color === 'black') {
           result = await this.calculateEloGain(0, match);
           resultToString = '0 - 1';
         }
         break;
       case 'resignation':
-      case 'timeout': 
+      case 'timeout':
         // it's reversed because the one who invokes is the loser
         if (color === 'white') {
           result = await this.calculateEloGain(0, match);
           resultToString = '0 - 1';
         } else if (color === 'black') {
           result = await this.calculateEloGain(1, match);
-          resultToString = '1 - 0'
+          resultToString = '1 - 0';
         }
         break;
       default:

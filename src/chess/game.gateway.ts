@@ -193,10 +193,10 @@ export class GameGateway
             .to(whiteUser.socketId)
             .emit('move-made-successfully', { ...payload, timeLeft: timeLeft });
         } else {
-          throw new WsException('Failed to make a move');
+          this.logger.error('Move was not successful.');
         }
 
-        if (moveMade.result && moveMade.reason) {
+        if (moveMade?.result && moveMade?.reason) {
           // if there is a result the game is over
           // we delete timers in redis - none should be in motion
           await this.timerService.deleteRedisTimers(payload.gameId);

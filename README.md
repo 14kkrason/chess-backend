@@ -1,7 +1,6 @@
 ### Chess Backend
 
-Work-in-progress API that makes it possible to play chess games online. Written in NestJs.
-This project is a part of my B.Sc. thesis -> Internet application for online chess.
+API that makes it possible to play chess games online. Written in NestJS.
 
 ## How to run this API in development?
 
@@ -11,4 +10,12 @@ This app uses Node.js version 14.15.1, MongoDB version 5.0 and Redis 6.2 with Re
 2. Install all required packages.
 3. Run Redis and MongoDB - either as a services or via Docker.
 
-That's it for now! For a list of available commands see package.json.
+I used Docker Desktop for Windows, constructing basic containers with MongoDB and Redis using this commands:
+
+docker run -d -p 6379:6379 redislabs/redisearch:latest <---- Redis with Redisearch
+
+docker run -d --network mongo-network -p 27017:27017 
+--name mongodb 
+-e MONGO_INITDB_ROOT_USERNAME=admin 
+-e MONGO_INITDB_ROOT_PASSWORD=admin 
+mongo <---- MongoDB

@@ -59,9 +59,6 @@ export class GameController {
   @UseGuards(JwtAuthGuard)
   @Post('ongoing-game-data')
   async getOngoingGameData(@Req() req: Request) {
-    // TODO: CONTINUE HERE
-    // it is not this elements responsibility to inform about starting any countdown, this will be achieved
-    // in timers.service.ts
     const result = await this.gameService.getOngoingGameData(
       req.body.gameId,
       req.body.color,
@@ -125,8 +122,6 @@ export class GameController {
       req.body.gameId,
       req.body.color,
     );
-    
-    console.log(leftTime);
 
     return { leftTime: leftTime };
   }
