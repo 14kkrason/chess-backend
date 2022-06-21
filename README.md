@@ -1,3 +1,7 @@
+# Notice
+
+This version of the API is barren and does not adhere to good standards, such as SOLID methodology or Unit/Integration testing. It was written hastily, with not much tought besides 'get it done on time', which was a method that succeeded. It is kept on this branch for legacy reasons. It should NOT be touched for reasons other than showing off what was done for my B.Sc thesis. An effort to develop this app further is pursued on the master branch.
+
 ### Chess Backend
 
 API that makes it possible to play chess games online. Written in NestJS.
