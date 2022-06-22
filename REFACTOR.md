@@ -27,8 +27,8 @@ Each table represents a module: it's files, types, reasons to change and whether
 | user-validation.service.ts   | Service     | User validation criteria are changed      |  ❌  |  ❌   |
 | refresh-token.service.ts     | Service     | Handling of refresh tokens changes        |  ❌  |  ❌   |
 | token-parser.service.ts      | Service     | Token parsing is changed or extanded      |  ❌  |  ❌   |
-| refresh-token.interceptor.ts | Interceptor | Intercepting refresh tokens               |  ✅  |  ❌   |
-| access-token.interceptor.ts  | Interceptor | Intercepting access tokens                |  ✅  |  ❌   |
+| refresh-token.interceptor.ts | Interceptor | Intercepting refresh tokens               |  ✅  |  ✅   |
+| access-token.interceptor.ts  | Interceptor | Intercepting access tokens                |  ✅  |  ✅   |
 | ws.guard.ts                  | Guards      | Securing WS connections                   |  ❌  |  ❌   |
 | jwt.guard.ts                 | Guards      | Securing JWT tokens                       |  ❌  |  ❌   |
 | local.guard.ts               | Guards      | Securing via login info verification      |  ❌  |  ❌   |
