@@ -10,10 +10,10 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { AccessTokenInterceptor } from 'src/auth/access-token.interceptor';
-import { AuthService } from 'src/auth/auth.service';
-import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
-import { UsersManagmentService } from 'src/users-managment/users-managment.service';
+import { AccessTokenInterceptor } from '../auth/interceptors/access-token.interceptor';
+import { AuthService } from '../auth/auth.service';
+import { JwtAuthGuard } from '../auth/guards/jwt.guard';
+import { UsersManagmentService } from '../users-managment/users-managment.service';
 
 @Controller('profile')
 export class ProfileController {

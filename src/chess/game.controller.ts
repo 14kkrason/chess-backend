@@ -16,8 +16,8 @@ import {
 import { GameService } from './game.service';
 import { Request, Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
-import { AccessTokenInterceptor } from 'src/auth/access-token.interceptor';
-import { AuthService } from 'src/auth/auth.service';
+import { AccessTokenInterceptor } from '../auth/interceptors/access-token.interceptor';
+import { AuthService } from '../auth/auth.service';
 import { TimerService } from './timer.service';
 
 // TODO: Implement logic when match is found:
