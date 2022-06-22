@@ -17,7 +17,7 @@ import { UsersManagmentService } from '../users-managment/users-managment.servic
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
-import { RefreshTokenInterceptor } from './refreshToken.interceptor';
+import { RefreshTokenInterceptor } from './refresh-token.interceptor';
 
 import { v4 as uuidv4 } from 'uuid';
 

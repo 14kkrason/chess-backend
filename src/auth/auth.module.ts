@@ -12,8 +12,8 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtAuthGuard } from './guards/jwt.guard';
 import { WsGuard } from './guards/ws.guard';
-import { RefreshTokenInterceptor } from './refreshToken.interceptor';
-import { AccessTokenInterceptor } from './accessToken.interceptor';
+import { RefreshTokenInterceptor } from './refresh-token.interceptor';
+import { AccessTokenInterceptor } from './access-token.interceptor';
 import { RedisModule } from 'src/redis/redis.module';
 
 @Module({
