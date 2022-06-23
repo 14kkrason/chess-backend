@@ -9,10 +9,10 @@ Each table represents a module: it's files, types, reasons to change and whether
 > 'The most important step a man can make is the next one.'  
 > \- Brandon Sanderson
 
-✅ - done
-❌ - not done
-✅/❌ - in place, but needs changes
-➖ - not needed
+✅ - done  
+❌ - not done  
+✅/❌ - in place, but needs changes  
+➖ - not needed  
 
 &nbsp;
 
@@ -24,16 +24,16 @@ Each table represents a module: it's files, types, reasons to change and whether
 | :--------------------------- | :---------- | :---------------------------------------- | :--: | :---: |
 | auth.controller.ts           | Controller  | Authorization process with HTTP changes   |  ✅  |  ❌   |
 | password.service.ts          | Service     | Process of generating password is changed |  ❌  |  ❌   |
-| user-validation.service.ts   | Service     | User validation criteria are changed      |  ❌  |  ❌   |
+| user-validation.service.ts   | Service     | User validation criteria are changed      |  ✅  |  ❌   |
 | refresh-token.service.ts     | Service     | Handling of refresh tokens changes        |  ❌  |  ❌   |
 | token-parser.service.ts      | Service     | Token parsing is changed or extanded      |  ❌  |  ❌   |
 | refresh-token.interceptor.ts | Interceptor | Intercepting refresh tokens               |  ✅  |  ✅   |
 | access-token.interceptor.ts  | Interceptor | Intercepting access tokens                |  ✅  |  ✅   |
-| ws.guard.ts                  | Guards      | Securing WS connections                   |  ❌  |  ❌   |
-| jwt.guard.ts                 | Guards      | Securing JWT tokens                       |  ❌  |  ❌   |
-| local.guard.ts               | Guards      | Securing via login info verification      |  ❌  |  ❌   |
-| jwt.strategy.ts              | Strategy    | Process of authenticating JWT             |  ❌  |  ❌   |
-| local.strategy.ts            | Strategy    | Process of authenticating local data      |  ❌  |  ❌   |
+| ws.guard.ts                  | Guards      | Securing WS connections                   |  ✅  |  ❌   |
+| jwt.guard.ts                 | Guards      | Securing JWT tokens                       |  ✅  |  ➖   |
+| local.guard.ts               | Guards      | Securing via login info verification      |  ✅  |  ➖   |
+| jwt.strategy.ts              | Strategy    | Process of authenticating JWT             |  ✅  |  ➖   |
+| local.strategy.ts            | Strategy    | Process of authenticating local data      |  ✅  |  ➖   |
 
 &nbsp;
 

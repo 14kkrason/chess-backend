@@ -17,15 +17,17 @@ import { UsersManagmentService } from '../users-managment/users-managment.servic
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
-import { RefreshTokenInterceptor } from './refresh-token.interceptor';
+import { RefreshTokenInterceptor } from './interceptors/refresh-token.interceptor';
 
 import { v4 as uuidv4 } from 'uuid';
+import { UserValidationService } from './user-validation.service';
 
 @Controller('auth')
 export class AuthController {
   private readonly logger: Logger = new Logger(AuthController.name);
   constructor(
     private readonly authService: AuthService,
+    private readonly userValidationService: UserValidationService,
     private readonly usersManagmentService: UsersManagmentService,
     private readonly mailerService: MailerService,
   ) {}
@@ -33,7 +35,7 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('login')
   async login(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    const jwt = await this.authService.login(req.user!);
+    const jwt = await this.userValidationService.login(req.user!);
     const refresh = await this.authService.issueRefreshToken(req.user!);
     res.cookie('access_token', jwt.access_token, {
       httpOnly: true,
@@ -83,7 +85,7 @@ export class AuthController {
           res.clearCookie('refresh_token');
 
           // get new tokens
-          const newAccessToken = await this.authService.login({
+          const newAccessToken = await this.userValidationService.login({
             username: dbUser.username,
             role: dbUser.role,
           });

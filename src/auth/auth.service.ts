@@ -23,41 +23,6 @@ export class AuthService {
     private readonly redisService: RedisService,
   ) {}
 
-  async validateUser(username: string, password: string) {
-    const user = await this.usersManagmentService.findOne({
-      username: username,
-    });
-    if (!user) {
-      this.logger.log(`User ${username} not found. Validation failed.`);
-      return null;
-    }
-    const validate = await bcrypt.compare(password, user!.password);
-    if (validate) {
-      const result: ValidatedUser = {
-        username: user.username,
-        role: user.role,
-      };
-      this.logger.verbose(`User ${username} vaildated succesfuly.`);
-      return result;
-    }
-    this.logger.log(
-      `Password is not a match for user ${username}. Validation failed.`,
-    );
-    return null;
-  }
-
-  async login(user: ValidatedUser) {
-    const dbUser = await this.usersManagmentService.findOne({
-      username: user.username,
-    });
-    const payload = { username: user.username, role: user.role };
-    return {
-      access_token: this.jwtService.sign(payload, {
-        subject: dbUser?.accountId,
-      }),
-    };
-  }
-
   // using default secret key
   async decode(token: string) {
     return this.jwtService.decode(token);

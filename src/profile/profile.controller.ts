@@ -14,13 +14,14 @@ import { AccessTokenInterceptor } from '../auth/interceptors/access-token.interc
 import { AuthService } from '../auth/auth.service';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { UsersManagmentService } from '../users-managment/users-managment.service';
+import { UserValidationService } from 'src/auth/user-validation.service';
 
 @Controller('profile')
 export class ProfileController {
   logger: Logger = new Logger(ProfileController.name);
   constructor(
     private readonly usersManagmentService: UsersManagmentService,
-    private readonly authService: AuthService,
+    private readonly userValidationService: UserValidationService,
   ) {}
 
   // TODO: add input validation of all of those things
@@ -71,7 +72,7 @@ export class ProfileController {
     @Body('pass') pass: string,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const validatedUser = await this.authService.validateUser(
+    const validatedUser = await this.userValidationService.validateUser(
       res.locals.access_token.username,
       pass,
     );
@@ -110,7 +111,7 @@ export class ProfileController {
     @Body('pass') pass: string,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const validatedUser = await this.authService.validateUser(
+    const validatedUser = await this.userValidationService.validateUser(
       res.locals.access_token.username,
       pass,
     );
@@ -147,7 +148,7 @@ export class ProfileController {
     @Body('pass') pass: string,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const validatedUser = await this.authService.validateUser(
+    const validatedUser = await this.userValidationService.validateUser(
       res.locals.access_token.username,
       pass,
     );
