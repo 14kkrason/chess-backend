@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { UsersManagmentService } from 'src/users-managment/users-managment.service';
+import { UsersManagmentService } from '../users-managment/users-managment.service';
 import { ValidatedUser } from './interfaces/validated-user.interface';
 
 @Injectable()
