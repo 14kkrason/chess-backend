@@ -21,6 +21,7 @@ import { RefreshTokenInterceptor } from './interceptors/refresh-token.intercepto
 
 import { v4 as uuidv4 } from 'uuid';
 import { UserValidationService } from './user-validation.service';
+import { PasswordService } from './password.service';
 
 @Controller('auth')
 export class AuthController {
@@ -30,6 +31,7 @@ export class AuthController {
     private readonly userValidationService: UserValidationService,
     private readonly usersManagmentService: UsersManagmentService,
     private readonly mailerService: MailerService,
+    private readonly passwordService: PasswordService,
   ) {}
 
   @UseGuards(LocalAuthGuard)
@@ -64,7 +66,6 @@ export class AuthController {
     this.logger.log(`Logout successful for user ${req.user!.username}`);
     return { message: 'Logout successful.' };
   }
-
 
   @Post('refresh-token')
   @UseInterceptors(RefreshTokenInterceptor)
@@ -147,7 +148,7 @@ export class AuthController {
     const userEmail = await this.usersManagmentService.getUserEmail(username);
     console.log(userEmail);
     if (userEmail?.email === email) {
-      const newPassword = await this.authService.generatePassword();
+      const newPassword = await this.passwordService.generatePassword();
 
       const _ = await this.usersManagmentService.changePassword(
         userEmail.accountId,

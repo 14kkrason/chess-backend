@@ -16,6 +16,7 @@ import { RefreshTokenInterceptor } from './interceptors/refresh-token.intercepto
 import { AccessTokenInterceptor } from './interceptors/access-token.interceptor';
 import { RedisModule } from 'src/redis/redis.module';
 import { UserValidationService } from './user-validation.service';
+import { PasswordService } from './password.service';
 
 @Module({
   imports: [
@@ -44,7 +45,8 @@ import { UserValidationService } from './user-validation.service';
     WsGuard,
     RefreshTokenInterceptor,
     AccessTokenInterceptor,
-    UserValidationService
+    UserValidationService,
+    PasswordService
   ],
   controllers: [AuthController],
   exports: [
