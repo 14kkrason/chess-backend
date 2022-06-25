@@ -11,7 +11,6 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { CreateUserDto } from '../users-managment/dtos/createUser.dto';
 import { UsersManagmentService } from '../users-managment/users-managment.service';
 
 import { AuthService } from './auth.service';
@@ -19,7 +18,6 @@ import { JwtAuthGuard } from './guards/jwt.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { RefreshTokenInterceptor } from './interceptors/refresh-token.interceptor';
 
-import { v4 as uuidv4 } from 'uuid';
 import { UserValidationService } from './user-validation.service';
 import { PasswordService } from './password.service';
 
@@ -28,10 +26,10 @@ export class AuthController {
   private readonly logger: Logger = new Logger(AuthController.name);
   constructor(
     private readonly authService: AuthService,
-    private readonly userValidationService: UserValidationService,
-    private readonly usersManagmentService: UsersManagmentService,
     private readonly mailerService: MailerService,
     private readonly passwordService: PasswordService,
+    private readonly userValidationService: UserValidationService,
+    private readonly usersManagmentService: UsersManagmentService,
   ) {}
 
   @UseGuards(LocalAuthGuard)
@@ -146,7 +144,6 @@ export class AuthController {
     @Body('email') email: string,
   ) {
     const userEmail = await this.usersManagmentService.getUserEmail(username);
-    console.log(userEmail);
     if (userEmail?.email === email) {
       const newPassword = await this.passwordService.generatePassword();
 
@@ -165,8 +162,6 @@ export class AuthController {
           username: username,
         },
       });
-
-      console.log(result);
     }
     return { message: 'Reset recieved' };
   }
