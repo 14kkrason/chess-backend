@@ -20,6 +20,7 @@ import { RefreshTokenInterceptor } from './interceptors/refresh-token.intercepto
 
 import { UserValidationService } from './user-validation.service';
 import { PasswordService } from './password.service';
+import { RefreshTokenService } from './refresh-token.service';
 
 @Controller('auth')
 export class AuthController {
@@ -28,6 +29,7 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly mailerService: MailerService,
     private readonly passwordService: PasswordService,
+    private readonly refreshTokenService: RefreshTokenService,
     private readonly userValidationService: UserValidationService,
     private readonly usersManagmentService: UsersManagmentService,
   ) {}
@@ -36,7 +38,7 @@ export class AuthController {
   @Post('login')
   async login(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const jwt = await this.userValidationService.login(req.user!);
-    const refresh = await this.authService.issueRefreshToken(req.user!);
+    const refresh = await this.refreshTokenService.issueRefreshToken(req.user!);
     res.cookie('access_token', jwt.access_token, {
       httpOnly: true,
       expires: new Date(Date.now() + 1000 * 60 * 15), // 16 minutes, token expires in 15
@@ -58,7 +60,7 @@ export class AuthController {
   @UseInterceptors(RefreshTokenInterceptor)
   @Post('logout')
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    await this.authService.revokeRefreshToken(res.locals.refresh_token.id);
+    await this.refreshTokenService.revokeRefreshToken(res.locals.refresh_token.id);
     res.clearCookie('access_token', { httpOnly: true });
     res.clearCookie('refresh_token', { httpOnly: true });
     this.logger.log(`Logout successful for user ${req.user!.username}`);
@@ -88,7 +90,7 @@ export class AuthController {
             username: dbUser.username,
             role: dbUser.role,
           });
-          const newRefreshToken = await this.authService.issueRefreshToken({
+          const newRefreshToken = await this.refreshTokenService.issueRefreshToken({
             username: dbUser.username,
             role: dbUser.role,
           });

@@ -9,10 +9,6 @@ import { v4 as uuid } from 'uuid';
 import { UsersManagmentService } from '../users-managment/users-managment.service';
 import { ValidatedUser } from './interfaces/validated-user.interface';
 
-import * as crypto from 'crypto';
-import { promisify } from 'util';
-const randomBytesAsync = promisify(crypto.randomBytes);
-
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -26,26 +22,6 @@ export class AuthService {
   // using default secret key
   async decode(token: string) {
     return this.jwtService.decode(token);
-  }
-
-  async revokeRefreshToken(user: Partial<User>) {
-    await this.usersManagmentService.updateRefreshToken(user, '');
-  }
-
-  async issueRefreshToken(user: ValidatedUser) {
-    const dbUser = await this.usersManagmentService.findOne({
-      username: user.username,
-    });
-    const payload = { id: uuid() };
-    await this.usersManagmentService.updateRefreshToken(user, payload.id);
-    const signedPayload = this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('REFRESH_SECRET'),
-      expiresIn: '7d',
-      subject: dbUser?.accountId,
-    });
-    return {
-      refresh_token: signedPayload,
-    };
   }
 
   async verifyToken(token: string, type: string) {

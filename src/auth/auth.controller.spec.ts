@@ -6,6 +6,7 @@ import { UsersManagmentService } from '../users-managment/users-managment.servic
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { PasswordService } from './password.service';
+import { RefreshTokenService } from './refresh-token.service';
 import { UserValidationService } from './user-validation.service';
 
 const mockUser = {
@@ -36,6 +37,14 @@ describe('Auth Controller', () => {
       providers: [
         {
           provide: AuthService,
+          useValue: {
+            // we don't do anything here 
+            // no function is needed for testing
+            // but is needed as dependency
+          }
+        },
+        {
+          provide: RefreshTokenService,
           useValue: {
             issueRefreshToken: jest
               .fn()
