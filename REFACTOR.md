@@ -25,7 +25,7 @@ Each table represents a module: it's files, types, reasons to change and whether
 | auth.controller.ts           | Controller  | Authorization process with HTTP changes   |  ✅  |  ✅   |
 | password.service.ts          | Service     | Process of generating password is changed |  ✅  |  ✅   |
 | user-validation.service.ts   | Service     | User validation criteria are changed      |  ✅  |  ✅   |
-| refresh-token.service.ts     | Service     | Handling of refresh tokens changes        |  ❌  |  ❌   |
+| refresh-token.service.ts     | Service     | Handling of refresh tokens changes        |  ✅  |  ✅   |
 | token-parser.service.ts      | Service     | Token parsing is changed or extanded      |  ❌  |  ❌   |
 | refresh-token.interceptor.ts | Interceptor | Intercepting refresh tokens               |  ✅  |  ✅   |
 | access-token.interceptor.ts  | Interceptor | Intercepting access tokens                |  ✅  |  ✅   |
