@@ -6,12 +6,12 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { map, Observable, of } from 'rxjs';
-import { AuthService } from '../auth.service';
+import { TokenParserService } from '../token-parser.service';
 
 @Injectable()
 export class AccessTokenInterceptor implements NestInterceptor {
   logger: Logger = new Logger(AccessTokenInterceptor.name);
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly tokenParserService: TokenParserService) {}
 
   async intercept(
     context: ExecutionContext,
@@ -22,11 +22,12 @@ export class AccessTokenInterceptor implements NestInterceptor {
     try {
       if (request.headers.cookie) {
         // get access token
-        const accessTokenCookie = await this.authService.returnTokenFromCookie(
-          request.headers.cookie!,
-          'access_token',
-        );
-        const accessToken = await this.authService.verifyToken(
+        const accessTokenCookie =
+          await this.tokenParserService.returnTokenFromCookie(
+            request.headers.cookie!,
+            'access_token',
+          );
+        const accessToken = await this.tokenParserService.verifyToken(
           accessTokenCookie,
           'access_token',
         );

@@ -1,8 +1,7 @@
 import { createMock } from '@golevelup/ts-jest';
-import { CallHandler, ExecutionContext } from '@nestjs/common';
+import { ExecutionContext } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { lastValueFrom, of } from 'rxjs';
-import { AuthService } from '../auth.service';
+import { TokenParserService } from '../token-parser.service';
 import { WsGuard } from './ws.guard';
 
 // create the mock CallHandler for the interceptor
@@ -15,7 +14,7 @@ describe('WsGuard', () => {
       providers: [
         WsGuard,
         {
-          provide: AuthService,
+          provide: TokenParserService,
           useValue: {
             returnTokenFromCookie: jest
               .fn()
@@ -89,9 +88,7 @@ describe('WsGuard', () => {
     context.switchToWs().getClient.mockReturnValue({
       request: {
         headers: {
-          cookie: {
-
-          }
+          cookie: {},
         },
       },
     });

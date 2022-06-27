@@ -13,7 +13,6 @@ import {
 import { Request, Response } from 'express';
 import { UsersManagmentService } from '../users-managment/users-managment.service';
 
-import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { RefreshTokenInterceptor } from './interceptors/refresh-token.interceptor';
@@ -26,7 +25,6 @@ import { RefreshTokenService } from './refresh-token.service';
 export class AuthController {
   private readonly logger: Logger = new Logger(AuthController.name);
   constructor(
-    private readonly authService: AuthService,
     private readonly mailerService: MailerService,
     private readonly passwordService: PasswordService,
     private readonly refreshTokenService: RefreshTokenService,

@@ -11,7 +11,6 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AccessTokenInterceptor } from '../auth/interceptors/access-token.interceptor';
-import { AuthService } from '../auth/auth.service';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { UsersManagmentService } from '../users-managment/users-managment.service';
 import { UserValidationService } from 'src/auth/user-validation.service';

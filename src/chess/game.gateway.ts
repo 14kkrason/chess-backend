@@ -13,13 +13,13 @@ import { SchemaFieldTypes } from 'redis';
 import { Server, Socket } from 'socket.io';
 
 import { RedisService } from '../redis/redis.service';
-import { AuthService } from '../auth/auth.service';
 import { WsGuard } from '../auth/guards/ws.guard';
 import { TimerService } from './timer.service';
 import { ChessService, GameResult, MoveResult } from './chess.service';
 import { OnEvent } from '@nestjs/event-emitter';
 import { TimeoutEvent } from './interfaces/timeout-event.interface';
 import { MatchService } from './match.service';
+import { TokenParserService } from 'src/auth/token-parser.service';
 
 export interface AuthorizedSocket extends Socket {
   user?: any;
@@ -41,10 +41,10 @@ export class GameGateway
 
   constructor(
     private readonly redisService: RedisService,
-    private readonly authService: AuthService,
     private readonly timerService: TimerService,
     private readonly chessService: ChessService,
     private readonly matchService: MatchService,
+    private readonly tokenParserService: TokenParserService,
   ) {}
 
   // we create socket.id schema if it doesn't exist
@@ -74,11 +74,11 @@ export class GameGateway
   async handleConnection(client: Socket) {
     if (client.request.headers.cookie) {
       try {
-        const bearerToken = await this.authService.returnTokenFromCookie(
+        const bearerToken = await this.tokenParserService.returnTokenFromCookie(
           client.request.headers.cookie!,
           'access_token',
         );
-        const parsedToken = await this.authService.verifyToken(
+        const parsedToken = await this.tokenParserService.verifyToken(
           bearerToken,
           'access_token',
         );
@@ -107,13 +107,13 @@ export class GameGateway
 
   async handleDisconnect(client: any) {
     try {
-      const token = await this.authService.returnTokenFromCookie(
+      const token = await this.tokenParserService.returnTokenFromCookie(
         client.request.headers.cookie!,
         'access_token',
       );
       // we don't verify the token because we don't care if it is valid
       // (e.g not expired)
-      const user: any = await this.authService.decode(token);
+      const user: any = await this.tokenParserService.decode(token);
       if (user) {
         await this.redisService.client
           .del(`chess:socketUser:${user.username}`)

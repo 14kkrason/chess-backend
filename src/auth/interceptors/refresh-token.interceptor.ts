@@ -6,12 +6,14 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { AuthService } from '../auth.service';
+import { TokenParserService } from '../token-parser.service';
 
 @Injectable()
 export class RefreshTokenInterceptor implements NestInterceptor {
   logger: Logger = new Logger(RefreshTokenInterceptor.name);
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly tokenParserService: TokenParserService,
+  ) {}
 
   async intercept(
     context: ExecutionContext,
@@ -22,13 +24,14 @@ export class RefreshTokenInterceptor implements NestInterceptor {
     try {
       if (request.headers.cookie) {
         // get access token
-        const refreshTokenCookie = await this.authService.returnTokenFromCookie(
-          request.headers.cookie!,
-          'refresh_token',
-        );
-        const refreshToken = await this.authService.verifyToken(
+        const refreshTokenCookie =
+          await this.tokenParserService.returnTokenFromCookie(
+            request.headers.cookie!,
+            'refresh_token',
+          );
+        const refreshToken = await this.tokenParserService.verifyToken(
           refreshTokenCookie,
-          'refresh_token'
+          'refresh_token',
         );
 
         response.locals.refresh_token = refreshToken;
@@ -38,11 +41,9 @@ export class RefreshTokenInterceptor implements NestInterceptor {
     } catch (e) {
       if (e.message === 'jwt must be provided') {
         this.logger.debug(`No refresh token for user: ${e.message}`);
-      }
-      else {
+      } else {
         this.logger.error(e.message);
       }
-      
     } finally {
       return next.handle();
     }

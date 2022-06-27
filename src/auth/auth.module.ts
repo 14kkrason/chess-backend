@@ -18,6 +18,7 @@ import { RedisModule } from 'src/redis/redis.module';
 import { UserValidationService } from './user-validation.service';
 import { PasswordService } from './password.service';
 import { RefreshTokenService } from './refresh-token.service';
+import { TokenParserService } from './token-parser.service';
 
 @Module({
   imports: [
@@ -48,7 +49,8 @@ import { RefreshTokenService } from './refresh-token.service';
     AccessTokenInterceptor,
     UserValidationService,
     PasswordService,
-    RefreshTokenService
+    RefreshTokenService,
+    TokenParserService
   ],
   controllers: [AuthController],
   exports: [
@@ -62,7 +64,8 @@ import { RefreshTokenService } from './refresh-token.service';
     AccessTokenInterceptor,
     UserValidationService,
     PasswordService,
-    RefreshTokenService
+    RefreshTokenService,
+    TokenParserService
   ],
 })
 export class AuthModule {}

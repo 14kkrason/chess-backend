@@ -4,9 +4,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Request, Response } from 'express';
 import { UsersManagmentService } from '../users-managment/users-managment.service';
 import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
 import { PasswordService } from './password.service';
 import { RefreshTokenService } from './refresh-token.service';
+import { TokenParserService } from './token-parser.service';
 import { UserValidationService } from './user-validation.service';
 
 const mockUser = {
@@ -36,11 +36,9 @@ describe('Auth Controller', () => {
       controllers: [AuthController],
       providers: [
         {
-          provide: AuthService,
+          provide: TokenParserService,
           useValue: {
-            // we don't do anything here 
-            // no function is needed for testing
-            // but is needed as dependency
+            // we use nothing for dependency issues
           }
         },
         {

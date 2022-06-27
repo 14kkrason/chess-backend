@@ -2,7 +2,7 @@ import { createMock } from '@golevelup/ts-jest';
 import { CallHandler, ExecutionContext } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { lastValueFrom, of } from 'rxjs';
-import { AuthService } from '../auth.service';
+import { TokenParserService } from '../token-parser.service';
 import { AccessTokenInterceptor } from './access-token.interceptor';
 
 // create the mock CallHandler for the interceptor
@@ -15,7 +15,7 @@ describe('AcessTokenInterceptor', () => {
       providers: [
         AccessTokenInterceptor,
         {
-          provide: AuthService,
+          provide: TokenParserService,
           useValue: {
             returnTokenFromCookie: jest
               .fn()
