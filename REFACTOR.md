@@ -12,7 +12,7 @@ Each table represents a module: it's files, types, reasons to change and whether
 ✅ - done  
 ❌ - not done  
 ✅/❌ - in place, but needs changes  
-➖ - not needed  
+➖ - not needed
 
 &nbsp;
 
@@ -20,13 +20,15 @@ Each table represents a module: it's files, types, reasons to change and whether
 
 ---
 
+Note: auth.service.ts still exists as one will be moved from it further on in the refactoring process
+
 | Name                         | Type        | Reson to change                           | Done | Tests |
 | :--------------------------- | :---------- | :---------------------------------------- | :--: | :---: |
 | auth.controller.ts           | Controller  | Authorization process with HTTP changes   |  ✅  |  ✅   |
 | password.service.ts          | Service     | Process of generating password is changed |  ✅  |  ✅   |
 | user-validation.service.ts   | Service     | User validation criteria are changed      |  ✅  |  ✅   |
 | refresh-token.service.ts     | Service     | Handling of refresh tokens changes        |  ✅  |  ✅   |
-| token-parser.service.ts      | Service     | Token parsing is changed or extanded      |  ❌  |  ❌   |
+| token-parser.service.ts      | Service     | Token parsing is changed or extanded      |  ✅  |  ✅   |
 | refresh-token.interceptor.ts | Interceptor | Intercepting refresh tokens               |  ✅  |  ✅   |
 | access-token.interceptor.ts  | Interceptor | Intercepting access tokens                |  ✅  |  ✅   |
 | ws.guard.ts                  | Guards      | Securing WS connections                   |  ✅  |  ✅   |
