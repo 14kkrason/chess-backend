@@ -33,7 +33,7 @@ export interface AuthorizedSocket extends Socket {
   cookie: { name: 'test', httpOnly: true },
 })
 export class GameGateway
-  implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
+  implements OnGatewayConnection, OnGatewayDisconnect
 {
   @WebSocketServer()
   server: Server;
@@ -48,28 +48,6 @@ export class GameGateway
   ) {}
 
   // we create socket.id schema if it doesn't exist
-  async afterInit() {
-    try {
-      await this.redisService.client.ft.create(
-        'idx:socketUser',
-        {
-          login: SchemaFieldTypes.TEXT,
-          userId: SchemaFieldTypes.TEXT,
-          socketId: SchemaFieldTypes.TEXT,
-        },
-        {
-          ON: 'HASH',
-          PREFIX: 'chess:socketUser',
-        },
-      );
-    } catch (e) {
-      if (e.message === 'Index already exists') {
-        this.logger.verbose('Index exists already, skipped creation.');
-      } else {
-        this.logger.error('Error occured: ', e);
-      }
-    }
-  }
 
   async handleConnection(client: Socket) {
     if (client.request.headers.cookie) {

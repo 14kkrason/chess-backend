@@ -6,7 +6,7 @@ import { RedisService } from 'src/redis/redis.service';
 import { Match, MatchDocument } from './schemas/match.schema';
 
 @Injectable()
-export class MatchService implements OnModuleInit {
+export class MatchService {
   private readonly logger = new Logger(MatchService.name);
   constructor(
     @InjectModel(Match.name) private matchModel: Model<MatchDocument>,
@@ -97,33 +97,5 @@ export class MatchService implements OnModuleInit {
         pgn: 1,
       },
     );
-  }
-
-  async onModuleInit() {
-    try {
-      await this.redisService.client.ft.create(
-        'idx:match',
-        {
-          gameId: SchemaFieldTypes.TEXT,
-          gameType: SchemaFieldTypes.TEXT,
-          whiteId: SchemaFieldTypes.TEXT,
-          blackId: SchemaFieldTypes.TEXT,
-          white: SchemaFieldTypes.TEXT,
-          black: SchemaFieldTypes.TEXT,
-          whiteReady: SchemaFieldTypes.NUMERIC,
-          blackReady: SchemaFieldTypes.NUMERIC,
-        },
-        {
-          ON: 'HASH',
-          PREFIX: 'chess:match',
-        },
-      );
-    } catch (e) {
-      if (e.message === 'Index already exists') {
-        this.logger.verbose('Index exists already, skipped creation.');
-      } else {
-        this.logger.error('Error occured: ', e);
-      }
-    }
   }
 }

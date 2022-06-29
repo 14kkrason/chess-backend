@@ -4,7 +4,6 @@ import { v4 as uuid } from 'uuid';
 import { RedisService } from 'src/redis/redis.service';
 
 import { Lobby } from './interfaces/lobby.interface';
-import { SchemaFieldTypes } from 'redis';
 import { CreateLobbyDto } from './dtos/createLobby.dto';
 import { UsersManagmentService } from 'src/users-managment/users-managment.service';
 import { ChessService } from './chess.service';
@@ -14,7 +13,7 @@ import { TimerService } from './timer.service';
 import { MatchService } from './match.service';
 
 @Injectable()
-export class GameService implements OnModuleInit {
+export class GameService {
   private readonly logger: Logger = new Logger(GameService.name);
 
   constructor(
@@ -198,7 +197,7 @@ export class GameService implements OnModuleInit {
   }
 
   async deleteLobby(username: string): Promise<boolean> {
-    try {
+    try { 
       const lobby = await this.redisService.client.ft.search(
         'idx:lobby',
         `@playerName:${username}`,
@@ -208,31 +207,6 @@ export class GameService implements OnModuleInit {
     } catch (e) {
       this.logger.debug(`Error while deleting lobby: ${e.message}`);
       return false;
-    }
-  }
-
-  async onModuleInit() {
-    try {
-      await this.redisService.client.ft.create(
-        'idx:lobby',
-        {
-          gameId: SchemaFieldTypes.TEXT,
-          gameType: SchemaFieldTypes.TEXT,
-          creationTime: SchemaFieldTypes.NUMERIC,
-          playerName: SchemaFieldTypes.TEXT,
-          playerElo: SchemaFieldTypes.NUMERIC,
-        },
-        {
-          ON: 'HASH',
-          PREFIX: 'chess:lobby',
-        },
-      );
-    } catch (e) {
-      if (e.message === 'Index already exists') {
-        this.logger.verbose('Index exists already, skipped creation.');
-      } else {
-        this.logger.error('Error occured: ', e);
-      }
     }
   }
 }

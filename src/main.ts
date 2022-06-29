@@ -5,7 +5,7 @@ import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    logger: ['log', 'error', 'debug', 'warn'],
+    logger: ['log', 'error', 'debug', 'warn', 'verbose'],
   });
   app.use(cookieParser());
   app.setGlobalPrefix('api');
