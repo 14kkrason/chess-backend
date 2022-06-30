@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { User } from '../users-managment/schemas/user.schema';
-import { UsersManagmentService } from 'src/users-managment/users-managment.service';
-import { RedisService } from 'src/redis/redis.service';
+import { UsersManagmentService } from '../users-managment/users-managment.service';
+import { RedisService } from '../redis/redis.service';
 import { Lobby } from './interfaces/lobby.interface';
 
 @Injectable()
