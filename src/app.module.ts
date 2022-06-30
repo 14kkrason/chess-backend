@@ -14,7 +14,8 @@ import { ProfileModule } from './profile/profile.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
-//import { LobbyModule } from './lobby/lobby.module';
+import { LobbyModule } from './lobby/lobby.module';
+import { MatchModule } from './match/match.module';
 
 @Module({
   imports: [
@@ -61,7 +62,8 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
       }),
       inject: [ConfigService],
     }),
-    //LobbyModule,
+    LobbyModule,
+    MatchModule,
   ],
   controllers: [AppController],
   providers: [AppService],

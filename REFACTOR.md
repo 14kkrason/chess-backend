@@ -43,13 +43,12 @@ Note: auth.service.ts still exists as one will be moved from it further on in th
 
 ---
 
-| Name                      | Type       | Reson to change                           | Done | Tests |
-| :------------------------ | :--------- | :---------------------------------------- | :--: | :---: |
-| lobby.controller.ts       | Controller | Communication with frontend code          |  ❌  |  ❌   |
-| lobby-creation.service.ts | Service    | Process of lobby creation                 |  ❌  |  ❌   |
-| lobby-deletion.service.ts | Service    | Process of lobby deletion                 |  ❌  |  ❌   |
-| lobby-search.service.ts   | Service    | Process of lobby search                   |  ❌  |  ❌   |
-| lobby.gateway.ts          | Gateway    | Passing information about lobby to client |  ❌  |  ❌   |
+| Name                      | Type       | Reson to change                  | Done | Tests |
+| :------------------------ | :--------- | :------------------------------- | :--: | :---: |
+| lobby.controller.ts       | Controller | Communication with frontend code |  ✅  |  ❌   |
+| lobby-creation.service.ts | Service    | Process of lobby creation        |  ✅  |  ❌   |
+| lobby-deleter.service.ts  | Service    | Process of lobby deletion        |  ✅  |  ❌   |
+| lobby-search.service.ts   | Service    | Process of lobby search          |  ✅  |  ❌   |
 
 &nbsp;
 
@@ -60,10 +59,10 @@ Note: auth.service.ts still exists as one will be moved from it further on in th
 | Name                           | Type         | Reson to change                        | Done | Tests |
 | :----------------------------- | :----------- | :------------------------------------- | :--: | :---: |
 | match-management.controller.ts | Controller   | Requests regarding matches             |  ❌  |  ❌   |
-| match-creation.service.ts      | Service      | Match creation                         |  ❌  |  ❌   |
-| match-deletion.service.ts      | Service      | Match deletion                         |  ❌  |  ❌   |
-| match-get.service.ts           | Service      | Retrieval of matches for frontend code |  ❌  |  ❌   |
-| match-update.service.ts        | Service      | Changes to match object are added      |  ❌  |  ❌   |
+| match-creator.service.ts       | Service      | Match creation                         |  ✅  |  ❌   |
+| match-deleter.service.ts       | Service      | Match deletion                         |  ❌  |  ❌   |
+| match-getter.service.ts        | Service      | Retrieval of matches for frontend code |  ❌  |  ❌   |
+| match-updater.service.ts       | Service      | Changes to match object are added      |  ❌  |  ❌   |
 | elo.service.ts                 | Service      | Calculation of elo changes             |  ❌  |  ❌   |
 | match.gateway.ts               | Gateway      | Comm with client about matche          |  ❌  |  ❌   |
 | match.model.ts                 | Model/Schema | Model of match data changes            |  ❌  |  ❌   |

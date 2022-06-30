@@ -30,7 +30,7 @@ export class RedisService implements OnModuleInit{
     this.setupRedisearchIndexes();
   }
 
-  setupRedisearchIndexes() {
+  private setupRedisearchIndexes() {
     this.indexes.forEach((index) => {
       this.client.ft
         .create(index.name, index.schema, index.options)
