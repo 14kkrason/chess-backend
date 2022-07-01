@@ -9,7 +9,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { MatchCreatorService } from 'src/match/match-creator.service';
+import { MatchCreatorService } from '../match/match-creator.service';
 
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { AccessTokenInterceptor } from '../auth/interceptors/access-token.interceptor';
@@ -47,7 +47,8 @@ export class LobbyController {
       );
       res.status(HttpStatus.CREATED);
       return {
-        message: 'Lobby was created sucessfully, waiting for a match to start.',
+        message:
+          'Match not found, lobby was created instead. Waiting for a match to start.',
       };
     } else if (
       findLobbyResult.lobby === null &&
@@ -60,14 +61,16 @@ export class LobbyController {
           'Either username did not match any we have in the DB or the chosen gametype was incorrect. Please try again.',
       };
     } else if (findLobbyResult.lobby && findLobbyResult.lobbySearchUser) {
-      // we have indeed found a lobby!
+      await this.lobbyDeleterService.deleteLobby(
+        findLobbyResult.lobby.playerName,
+      );
       await this.matchCreatorService.createMatch(
         findLobbyResult.lobby,
         findLobbyResult.lobbySearchUser,
       );
 
       res.status(HttpStatus.OK);
-      return { message: 'Match found, expect a response in a minute.' }
+      return { message: 'Match found, expect a response in a minute.' };
     }
   }
 
