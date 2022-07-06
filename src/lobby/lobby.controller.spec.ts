@@ -1,12 +1,15 @@
 import { createMock } from '@golevelup/ts-jest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Request, Response } from 'express';
+import { MatchGateway } from '../match/match.gateway';
+import { TimerService } from '../timer/timer.service';
 import { TokenParserService } from '../auth/token-parser.service';
 import { MatchCreatorService } from '../match/match-creator.service';
 import { LobbyCreatorService } from './lobby-creator.service';
 import { LobbyDeleterService } from './lobby-deleter.service';
 import { LobbySearchService } from './lobby-search.service';
 import { LobbyController } from './lobby.controller';
+import { Match } from 'src/match/schemas/match.schema';
 
 // findLobby mock values
 
@@ -124,17 +127,43 @@ describe('LobbyController', () => {
         {
           provide: MatchCreatorService,
           useValue: {
-            createMatch: jest
+            createMatchInDatabase: jest
               .fn()
               .mockImplementation((_lobby: any, _lobbySearchUser: any) => {
-                // pass, we do not care
+                return createMock<Match>();
               }),
+            createMatchInCache: jest
+              .fn()
+              .mockImplementation(
+                (
+                  gameId: string,
+                  gameType: string,
+                  whiteId: string,
+                  blackId: string,
+                  white: string,
+                  black: string,
+                ) => {
+                  // pass, we do not care
+                },
+              ),
           },
         },
         {
           provide: TokenParserService,
           useValue: {
             // we use nothing for dependency issues
+          },
+        },
+        {
+          provide: TimerService,
+          useValue: {
+            createRedisTimers: jest.fn().mockReturnValue(null),
+          },
+        },
+        {
+          provide: MatchGateway,
+          useValue: {
+            sendMatchStartInfoToPlayers: jest.fn().mockReturnValue(null),
           },
         },
       ],
@@ -165,13 +194,25 @@ describe('LobbyController', () => {
         username: 'user123',
       };
 
-      const result = await controller.handleFindLobby(request, response);
-      expect(result).toStrictEqual({
-        message: 'Match found, expect a response in a minute.',
+      response.status.mockImplementation((code: number) => {
+        expect(code).toBe(200);
+        return {} as Response;
       });
+
+      response.json.mockImplementation((body: any) => {
+        expect(body).toStrictEqual({
+          message: 'Match found, expect a response in a minute.',
+        });
+        return {} as Response;
+      });
+
+      await controller.handleFindLobby(request, response);
+      /* expect(result).toStrictEqual({
+        message: 'Match found, expect a response in a minute.',
+      }); */
       expect(lobbySearchService.findLobby).toBeCalled();
       expect(lobbyDeleterService.deleteLobby).toBeCalled();
-      expect(matchCreatorService.createMatch).toBeCalled();
+      expect(matchCreatorService.createMatchInDatabase).toBeCalled();
     });
 
     it('should create lobby when one was not found', async () => {
@@ -183,11 +224,24 @@ describe('LobbyController', () => {
         username: 'user123',
       };
 
+      response.status.mockImplementation((code: number) => {
+        expect(code).toBe(201);
+        return {} as Response;
+      });
+
+      response.json.mockImplementation((body: any) => {
+        expect(body).toStrictEqual({
+          message:
+            'Match not found, lobby was created instead. Waiting for a match to start.',
+        });
+        return {} as Response;
+      });
+
       const result = await controller.handleFindLobby(request, response);
-      expect(result).toStrictEqual({
+      /* expect(result).toStrictEqual({
         message:
           'Match not found, lobby was created instead. Waiting for a match to start.',
-      });
+      }); */
       expect(lobbySearchService.findLobby).toBeCalled();
       expect(lobbyCreatorService.createLobby).toBeCalled();
     });
@@ -201,11 +255,25 @@ describe('LobbyController', () => {
         username: 'wrong_username',
       };
 
+      response.status.mockImplementation((code: number) => {
+        expect(code).toBe(400);
+        return {} as Response;
+      });
+
+      response.json.mockImplementation((body: any) => {
+        expect(body).toStrictEqual({
+          message:
+            'Either username did not match any we have in the DB or the chosen gametype was incorrect. Please try again.',
+        });
+        return {} as Response;
+      });
+
       const result = await controller.handleFindLobby(request, response);
-      expect(result).toStrictEqual({
+      /* expect(result).toStrictEqual({
         message:
           'Either username did not match any we have in the DB or the chosen gametype was incorrect. Please try again.',
-      });
+      }); */
+      console.log(result);
       expect(lobbySearchService.findLobby).toBeCalled();
     });
   });
