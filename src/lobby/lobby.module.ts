@@ -7,9 +7,10 @@ import { RedisModule } from 'src/redis/redis.module';
 import { AuthModule } from 'src/auth/auth.module';
 import { UsersManagmentModule } from 'src/users-managment/users-managment.module';
 import { MatchModule } from 'src/match/match.module';
+import { TimerModule } from 'src/timer/timer.module';
 
 @Module({
-  imports: [AuthModule, RedisModule, UsersManagmentModule, MatchModule],
+  imports: [AuthModule, RedisModule, UsersManagmentModule, MatchModule, TimerModule],
   controllers: [LobbyController],
   providers: [LobbyCreatorService, LobbyDeleterService, LobbySearchService],
 })

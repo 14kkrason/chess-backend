@@ -16,6 +16,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { LobbyModule } from './lobby/lobby.module';
 import { MatchModule } from './match/match.module';
+import { TimerModule } from './timer/timer.module';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { MatchModule } from './match/match.module';
     }),
     LobbyModule,
     MatchModule,
+    TimerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -39,7 +39,6 @@ export class ChessService {
     lobby: Lobby,
   ): Promise<MatchClientInformation> {
     const randomizer = Math.floor(Math.random() * 100);
-    console.log(randomizer);
     const newPlayerDbUser = await this.userMangamentService.findOne({
       username: newPlayer.playerName,
     });
